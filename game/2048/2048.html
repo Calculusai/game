@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2048游戏</title>
+    <link rel="stylesheet" href="../../css/common.css">
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon"  href="/images/game.png" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <!-- 页面头部 -->
+    <div id="header"></div>
+
+    <!-- 游戏内容 -->
+    <main class="main-content">
+        <div class="container">
+            <div class="game-header">
+                <h1 class="title">H.Ai.2048</h1>
+                <div class="scores">
+                    <div class="score-box">
+                        <div class="score-label">得分</div>
+                        <div class="score-value" id="score">0</div>
+                    </div>
+                    <div class="score-box">
+                        <div class="score-label">最高分</div>
+                        <div class="score-value" id="best-score">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="intro-text">合并数字以到达 2048 图块！</div>
+
+            <div class="game-board" id="game-board">
+                <div class="background-grid" id="background-grid">
+                    <!-- 背景格子将由JS动态生成 -->
+                </div>
+                <!-- 数字方块将由JS动态生成并定位 -->
+            </div>
+
+            <div class="buttons-container">
+                <button class="new-game" id="new-game">新游戏</button>
+                <button class="home-button" id="home-button">返回首页</button>
+            </div>
+
+            <div class="how-to-play">
+                <span class="how-to-text">如何玩 2048：</span> 使用箭头键移动图块。当两个具有相同数字的图块接触时，它们将合二为一！
+            </div>
+
+            <div class="game-message" id="game-message">
+                <div class="message-text" id="message-text"></div>
+                <button class="new-game" id="retry">重新开始</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页面底部 -->
+    <div id="footer"></div>
+
+
+    <script src="game.js"></script>
+</body>
+
+</html>
+    
+
+<script>
+    // 加载header
+    $("#header").load("/components/header.html");
+    // 加载footer
+    $("#footer").load("/components/footer.html");
+</script>

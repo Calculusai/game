@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H.AiGame</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon"  href="/images/game.png" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 引入jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <!-- 页面头部 -->
+    <!-- 头部占位符 -->
+    <div id="header"></div>
+
+    <!-- 页面主体 -->
+    <main class="main-content">
+        <div class="container">
+            <h1>H.AiGame</h1>
+            <div class="games-grid">
+                <!-- 2048游戏卡片 -->
+                <div class="game-card">
+                    <a href="game/2048/2048.html" style="text-decoration: none;">
+                        <div class="game-preview">
+                            <div class="game-preview-2048">
+                                <div class="number-2">2</div>
+                                <div class="number-0">0</div>
+                                <div class="number-4">4</div>
+                                <div class="number-8">8</div>
+                            </div>
+                        </div>
+                        <div class="game-info">
+                            <h3>2048</h3>
+                            <p>经典的数字合并游戏，通过滑动将相同的数字合并，努力达到2048！</p>
+                        </div>
+                    </a>
+                </div>
+                <!-- 在此处添加更多游戏卡片 -->
+            </div>
+        </div>
+    </main>
+
+    <!-- 页面底部 -->
+    <div id="footer"></div>
+</body>
+
+</html>
+<script>
+    // 加载header
+    $("#header").load("/components/header.html");
+    // 加载footer
+    $("#footer").load("/components/footer.html");
+</script>

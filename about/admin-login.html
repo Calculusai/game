@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员登录 - HoshinoAI</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="/images/game.png" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <div id="header"></div>
+    <div class="container">
+        <main class="admin-login-page">
+            <div class="admin-header">
+                <h1>管理员登录</h1>
+                <p class="subtitle">登录以访问订阅通知管理系统</p>
+            </div>
+
+            <div class="login-content">
+                <section class="login-form">
+                    <div class="form-header">
+                        <i class="fas fa-user-shield"></i>
+                        <h2>管理员身份验证</h2>
+                    </div>
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="adminUsername"><i class="fas fa-user"></i> 管理员账号：</label>
+                            <input type="text" id="adminUsername" name="adminUsername" placeholder="请输入管理员账号" required>
+                            <div class="error-message" id="username-error"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="adminPassword"><i class="fas fa-lock"></i> 管理员密码：</label>
+                            <input type="password" id="adminPassword" name="adminPassword" placeholder="请输入管理员密码"
+                                required>
+                            <div class="error-message" id="password-error"></div>
+                        </div>
+                        <div class="form-group">
+                            <div class="error-message" id="login-error"></div>
+                        </div>
+                        <button type="submit" class="btn-login" id="loginBtn">
+                            <i class="fas fa-sign-in-alt"></i> 登录
+                        </button>
+                    </form>
+                </section>
+            </div>
+        </main>
+    </div>
+    <div id="footer"></div>
+
+    <script>
+        // 存储管理员凭据（实际应用中应使用服务器端验证）
+        // 使用您的邮箱作为用户名
+        const adminCredentials = {
+            username: "admin",  // 管理员用户名
+            password: "hoshinoai2024"  // 管理员密码
+        };
+
+        // 登录表单处理
+        document.getElementById('loginForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // 清除错误信息
+            document.getElementById('username-error').textContent = '';
+            document.getElementById('password-error').textContent = '';
+            document.getElementById('login-error').textContent = '';
+
+            // 获取输入值
+            const username = document.getElementById('adminUsername').value.trim();
+            const password = document.getElementById('adminPassword').value;
+
+            // 简单验证
+            let isValid = true;
+
+            if (!username) {
+                document.getElementById('username-error').textContent = '请输入管理员账号';
+                isValid = false;
+            }
+
+            if (!password) {
+                document.getElementById('password-error').textContent = '请输入管理员密码';
+                isValid = false;
+            }
+
+            if (isValid) {
+                // 验证凭据
+                if (username === adminCredentials.username && password === adminCredentials.password) {
+                    // 登录成功
+                    localStorage.setItem('admin_logged_in', 'true');
+                    localStorage.setItem('admin_login_time', new Date().toISOString());
+
+                    // 重定向到管理页面
+                    window.location.href = 'admin-notify.html';
+                } else {
+                    // 登录失败
+                    document.getElementById('login-error').textContent = '账号或密码不正确，请重试';
+                }
+            }
+        });
+
+        // 检查是否已登录
+        document.addEventListener('DOMContentLoaded', function () {
+            const isLoggedIn = localStorage.getItem('admin_logged_in') === 'true';
+            const loginTime = localStorage.getItem('admin_login_time');
+
+            // 如果已登录且登录时间在24小时内，直接跳转到管理页面
+            if (isLoggedIn && loginTime) {
+                const currentTime = new Date();
+                const lastLoginTime = new Date(loginTime);
+                const hoursDiff = (currentTime - lastLoginTime) / (1000 * 60 * 60);
+
+                if (hoursDiff < 24) {
+                    window.location.href = 'admin-notify.html';
+                } else {
+                    // 登录过期，清除登录状态
+                    localStorage.removeItem('admin_logged_in');
+                    localStorage.removeItem('admin_login_time');
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
+<script>
+    // 加载header
+    $("#header").load("/components/header.html");
+    // 加载footer
+    $("#footer").load("/components/footer.html");
+</script>

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订阅通知管理 - HoshinoAI</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="/images/game.png" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/admin.js" defer></script>
+</head>
+
+<body>
+    <div id="header"></div>
+    <div class="container">
+        <main class="admin-page">
+            <div class="admin-header">
+                <h1>订阅通知管理</h1>
+                <p class="subtitle">向订阅用户发送游戏更新和新功能通知</p>
+                <button onclick="logoutAdmin()" class="btn-logout">
+                    <i class="fas fa-sign-out-alt"></i> 退出登录
+                </button>
+            </div>
+
+            <div class="admin-content">
+                <section class="notification-form">
+                    <div class="form-header">
+                        <i class="fas fa-paper-plane"></i>
+                        <h2>发送通知</h2>
+                    </div>
+                    <form id="notifyForm">
+                        <div class="form-group">
+                            <label for="notifyType"><i class="fas fa-tag"></i> 通知类型：</label>
+                            <select id="notifyType" name="notifyType" required>
+                                <option value="">请选择通知类型</option>
+                                <option value="new-game">新游戏发布</option>
+                                <option value="game-update">游戏更新</option>
+                                <option value="exclusive">独家内容</option>
+                                <option value="feature">新功能上线</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="notifyTitle"><i class="fas fa-heading"></i> 通知标题：</label>
+                            <input type="text" id="notifyTitle" name="notifyTitle" placeholder="例如：新游戏上线通知" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="notifyContent"><i class="fas fa-edit"></i> 通知内容：</label>
+                            <textarea id="notifyContent" name="notifyContent" rows="6" placeholder="请输入通知详细内容..."
+                                required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="adminEmail"><i class="fas fa-envelope"></i> 管理员邮箱：</label>
+                            <input type="email" id="adminEmail" name="adminEmail" value="1697391069@qq.com" readonly>
+                            <div class="hint">系统将使用此邮箱作为发件人</div>
+                        </div>
+                        <button type="submit" class="btn-notify" id="submitBtn">
+                            <i class="fas fa-paper-plane"></i> 发送通知
+                        </button>
+                    </form>
+
+                    <!-- 发送成功消息 -->
+                    <div id="notify-success" class="notify-message success-message" style="display: none;">
+                        <i class="fas fa-check-circle"></i>
+                        <div>
+                            <h3>通知发送成功！</h3>
+                            <p>您的通知已成功发送给所有订阅用户。</p>
+                            <p id="success-detail"></p>
+                        </div>
+                    </div>
+
+                    <!-- 发送失败消息 -->
+                    <div id="notify-error" class="notify-message error-message" style="display: none;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <div>
+                            <h3>通知发送失败</h3>
+                            <p id="error-message">抱歉，发送通知过程中出现了问题。请稍后再试。</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="subscribers-list">
+                    <div class="section-header">
+                        <i class="fas fa-users"></i>
+                        <h2>订阅用户列表</h2>
+                    </div>
+                    <div class="subscribers-stats">
+                        <div class="stat-item">
+                            <i class="fas fa-user-friends"></i>
+                            <div>
+                                <h3 id="subscriber-count">0</h3>
+                                <p>订阅用户总数</p>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-envelope"></i>
+                            <div>
+                                <h3 id="email-sent-count">0</h3>
+                                <p>已发送邮件</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="subscribers-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>邮箱</th>
+                                    <th>姓名</th>
+                                    <th>订阅时间</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subscribersTableBody">
+                                <!-- 用户数据将通过JavaScript动态加载 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    <div id="footer"></div>
+
+    <script>
+        // 检查管理员登录状态
+        function checkAdminLogin() {
+            const isLoggedIn = localStorage.getItem('admin_logged_in') === 'true';
+            const loginTime = localStorage.getItem('admin_login_time');
+
+            if (!isLoggedIn || !loginTime) {
+                // 未登录，重定向到登录页面
+                window.location.href = 'admin-login.html';
+                return false;
+            }
+
+            // 检查登录是否过期（24小时）
+            const currentTime = new Date();
+            const lastLoginTime = new Date(loginTime);
+            const hoursDiff = (currentTime - lastLoginTime) / (1000 * 60 * 60);
+
+            if (hoursDiff >= 24) {
+                // 登录过期，清除登录状态并重定向
+                localStorage.removeItem('admin_logged_in');
+                localStorage.removeItem('admin_login_time');
+                window.location.href = 'admin-login.html';
+                return false;
+            }
+
+            return true;
+        }
+
+        // 退出登录
+        function logoutAdmin() {
+            localStorage.removeItem('admin_logged_in');
+            localStorage.removeItem('admin_login_time');
+            window.location.href = 'admin-login.html';
+        }
+
+        // 加载订阅用户数据
+        async function loadSubscribers() {
+            try {
+                const response = await fetch('/api/get_subscribers.php');
+                const data = await response.json();
+
+                if (!data.success) {
+                    console.error('获取订阅者失败:', data.message);
+                    return;
+                }
+
+                const subscribers = data.subscribers;
+                const tableBody = document.getElementById('subscribersTableBody');
+                const subscriberCount = document.getElementById('subscriber-count');
+
+                // 更新订阅者计数
+                subscriberCount.textContent = subscribers.length;
+
+                // 清空表格
+                tableBody.innerHTML = '';
+
+                // 如果没有订阅者
+                if (subscribers.length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td colspan="4" class="no-data">暂无订阅用户数据</td>`;
+                    tableBody.appendChild(row);
+                    return;
+                }
+
+                // 添加订阅者数据到表格
+                subscribers.forEach((subscriber, index) => {
+                    const row = document.createElement('tr');
+                    const subscribedDate = new Date(subscriber.timestamp);
+                    const formattedDate = subscribedDate.toLocaleString('zh-CN', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    row.innerHTML = `
+                        <td>${subscriber.id}</td>
+                        <td>${subscriber.email}</td>
+                        <td>${subscriber.name || '未提供'}</td>
+                        <td>${formattedDate}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('加载订阅者数据时出错:', error);
+            }
+        }
+
+        // 加载通知统计数据
+        async function loadNotificationStats() {
+            try {
+                const response = await fetch('/api/get_notification_stats.php');
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('email-sent-count').textContent = data.sent_count || 0;
+                }
+            } catch (error) {
+                console.error('加载通知统计数据时出错:', error);
+            }
+        }
+
+        // 发送通知
+        async function sendNotification(data) {
+            try {
+                // 计算管理员令牌，用于验证身份
+                const adminToken = 'd402cd31e689ebe4b1e6bafed829b44f'; // 直接使用md5('hoshinoai2024')的结果
+
+                const response = await fetch('/api/send_notification.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ...data,
+                        admin_token: adminToken
+                    })
+                });
+
+                return await response.json();
+            } catch (error) {
+                console.error('发送通知错误:', error);
+                throw new Error('网络错误，请稍后再试');
+            }
+        }
+
+        // SHA-256哈希函数，用于生成管理员令牌 - 已不再使用
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        // 切换按钮状态
+        function toggleButtonLoading(isLoading) {
+            const button = document.getElementById('submitBtn');
+            if (isLoading) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 发送中...';
+            } else {
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-paper-plane"></i> 发送通知';
+            }
+        }
+
+        // 显示结果消息
+        function showMessage(type, show = true, message = '', details = '') {
+            const successMessage = document.getElementById('notify-success');
+            const errorMessage = document.getElementById('notify-error');
+            const errorMessageText = document.getElementById('error-message');
+            const successDetail = document.getElementById('success-detail');
+
+            successMessage.style.display = 'none';
+            errorMessage.style.display = 'none';
+
+            if (show) {
+                if (type === 'success') {
+                    if (details) {
+                        successDetail.textContent = details;
+                        successDetail.style.display = 'block';
+                    } else {
+                        successDetail.style.display = 'none';
+                    }
+
+                    successMessage.style.display = 'flex';
+                    successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    if (message) {
+                        errorMessageText.textContent = message;
+                    }
+                    errorMessage.style.display = 'flex';
+                    errorMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+
+        // 表单提交处理
+        document.getElementById('notifyForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            // 再次检查登录状态
+            if (!checkAdminLogin()) {
+                return;
+            }
+
+            showMessage('success', false);
+            showMessage('error', false);
+
+            // 获取表单数据
+            const type = document.getElementById('notifyType').value;
+            const title = document.getElementById('notifyTitle').value;
+            const content = document.getElementById('notifyContent').value;
+            const adminEmail = document.getElementById('adminEmail').value;
+
+            // 简单验证
+            if (!type || !title || !content) {
+                showMessage('error', true, '请填写所有必填字段');
+                return;
+            }
+
+            try {
+                toggleButtonLoading(true);
+
+                // 构建通知数据
+                const notificationData = {
+                    type: type,
+                    title: title,
+                    content: content,
+                    from: adminEmail
+                };
+
+                // 记录表单数据，方便调试
+                console.log('准备提交数据:', notificationData);
+
+                if (window.adminTests) {
+                    window.adminTests.logForm(notificationData);
+                }
+
+                // 发送通知
+                const response = await sendNotification(notificationData);
+
+                console.log('服务器响应:', response);
+
+                toggleButtonLoading(false);
+
+                if (response.success) {
+                    // 处理成功响应
+                    let details = '';
+                    if (response.data) {
+                        details = `成功发送 ${response.data.success} 封邮件，共 ${response.data.total} 位订阅用户`;
+                    }
+
+                    showMessage('success', true, '', details);
+
+                    // 清空表单
+                    document.getElementById('notifyForm').reset();
+
+                    // 重新加载统计数据
+                    loadNotificationStats();
+
+                    console.log('通知发送成功:', response);
+                } else {
+                    // 处理错误
+                    showMessage('error', true, response.message || '发送通知失败');
+                    console.error('发送通知失败:', response);
+                }
+
+            } catch (error) {
+                // 处理错误
+                toggleButtonLoading(false);
+                showMessage('error', true, error.message);
+                console.error('发送通知失败:', error);
+            }
+        });
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!checkAdminLogin()) {
+                return; // 如果未登录，中止后续代码执行
+            }
+
+            // 加载订阅者数据
+            loadSubscribers();
+
+            // 加载通知统计数据
+            loadNotificationStats();
+        });
+    </script>
+</body>
+
+</html>
+<script>
+    // 加载header
+    $("#header").load("/components/header.html");
+    // 加载footer
+    $("#footer").load("/components/footer.html");
+</script>

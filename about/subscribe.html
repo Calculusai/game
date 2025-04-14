@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订阅服务 - HoshinoAI</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="/images/game.png" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- 引入jQuery -->
+    <script src="/js/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <div id="header"></div>
+    <div class="container">
+        <main class="subscribe-page">
+            <div class="subscribe-header">
+                <h1>订阅服务</h1>
+                <p class="subtitle">加入我们，获取最新游戏资讯和独家内容</p>
+            </div>
+
+            <div class="subscribe-content">
+                <section class="subscription-info">
+                    <div class="info-header">
+                        <i class="fas fa-star"></i>
+                        <h2>订阅服务说明</h2>
+                    </div>
+                    <p>订阅我们的服务，您将获得：</p>
+                    <ul>
+                        <li><i class="fas fa-bell"></i> 新游戏发布通知</li>
+                        <li><i class="fas fa-sync"></i> 游戏更新提醒</li>
+                        <li><i class="fas fa-crown"></i> 独家游戏内容</li>
+                        <li><i class="fas fa-rocket"></i> 优先体验新功能</li>
+                    </ul>
+                </section>
+
+                <section class="subscription-form">
+                    <div class="form-header">
+                        <i class="fas fa-envelope"></i>
+                        <h2>订阅表单</h2>
+                    </div>
+                    <form id="subscribeForm">
+                        <div class="form-group">
+                            <label for="email"><i class="fas fa-envelope"></i> 电子邮箱：</label>
+                            <input type="email" id="email" name="email" placeholder="请输入您的邮箱地址" required>
+                            <div class="error-message" id="email-error"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="name"><i class="fas fa-user"></i> 姓名：</label>
+                            <input type="text" id="name" name="name" placeholder="请输入您的姓名">
+                            <div class="error-message" id="name-error"></div>
+                        </div>
+                        <div class="form-group privacy-group">
+                            <label>
+                                <input type="checkbox" name="privacy" id="privacy" required>
+                                <span>我已阅读并同意<a href="#">隐私政策</a></span>
+                            </label>
+                            <div class="error-message" id="privacy-error"></div>
+                        </div>
+                        <button type="submit" class="btn-subscribe" id="submitBtn">
+                            <i class="fas fa-paper-plane"></i> 立即订阅
+                        </button>
+                    </form>
+
+                    <!-- 订阅成功消息 -->
+                    <div id="subscribe-success" class="subscribe-message success-message" style="display: none;">
+                        <i class="fas fa-check-circle"></i>
+                        <div>
+                            <h3>订阅成功！</h3>
+                            <p>感谢您的订阅，我们将及时发送游戏更新和最新活动信息。</p>
+                        </div>
+                    </div>
+
+                    <!-- 订阅失败消息 -->
+                    <div id="subscribe-error" class="notify-message error-message" style="display: none;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <div>
+                            <h3>订阅失败</h3>
+                            <p id="error-message">抱歉，订阅过程中出现了问题。请稍后再试或联系我们的客服团队。</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    <div id="footer"></div>
+
+    <script>
+        // 表单验证函数
+        function validateEmail(email) {
+            const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+            return re.test(String(email).toLowerCase());
+        }
+
+        function validateName(name) {
+            return name.trim().length >= 2;
+        }
+
+        // 清除所有错误信息
+        function clearErrors() {
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.textContent = '';
+            });
+        }
+
+        // 提交订阅
+        async function submitSubscription(data) {
+            try {
+                console.log('准备发送到：/api/subscribe.php');
+                const response = await fetch('/api/subscribe.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                console.log('状态码：', response.status);
+
+                // 检查响应是否为JSON
+                const contentType = response.headers.get('content-type');
+                console.log('Content-Type:', contentType);
+
+                if (!contentType || !contentType.includes('application/json')) {
+                    // 尝试获取非JSON响应内容
+                    const textResponse = await response.text();
+                    console.error('服务器返回非JSON响应:', textResponse);
+                    throw new Error('服务器返回了无效的响应格式');
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('请求错误:', error);
+                throw new Error('网络错误或服务器响应格式错误，请稍后再试');
+            }
+        }
+
+        // 切换按钮状态
+        function toggleButtonLoading(isLoading) {
+            const button = document.getElementById('submitBtn');
+            if (isLoading) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 处理中...';
+            } else {
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-paper-plane"></i> 立即订阅';
+            }
+        }
+
+        // 显示结果消息
+        function showMessage(type, show = true, message = '') {
+            const successMessage = document.getElementById('subscribe-success');
+            const errorMessage = document.getElementById('subscribe-error');
+            const errorMessageText = document.getElementById('error-message');
+
+            successMessage.style.display = 'none';
+            errorMessage.style.display = 'none';
+
+            if (show) {
+                if (type === 'success') {
+                    successMessage.style.display = 'flex';
+                    successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    if (message) {
+                        errorMessageText.textContent = message;
+                    }
+                    errorMessage.style.display = 'flex';
+                    errorMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+
+        // 添加实时验证
+        document.addEventListener('DOMContentLoaded', function () {
+            // 邮箱验证
+            const emailInput = document.getElementById('email');
+            emailInput.addEventListener('blur', function () {
+                const emailError = document.getElementById('email-error');
+                if (this.value && !validateEmail(this.value)) {
+                    emailError.textContent = '请输入有效的电子邮箱地址';
+                    this.classList.remove('valid');
+                    this.classList.add('invalid');
+                } else if (this.value) {
+                    emailError.textContent = '';
+                    this.classList.remove('invalid');
+                    this.classList.add('valid');
+                } else {
+                    emailError.textContent = '';
+                    this.classList.remove('valid');
+                    this.classList.remove('invalid');
+                }
+            });
+
+            // 姓名验证
+            const nameInput = document.getElementById('name');
+            nameInput.addEventListener('blur', function () {
+                const nameError = document.getElementById('name-error');
+                if (this.value && !validateName(this.value)) {
+                    nameError.textContent = '姓名至少需要2个字符';
+                    this.classList.remove('valid');
+                    this.classList.add('invalid');
+                } else if (this.value) {
+                    nameError.textContent = '';
+                    this.classList.remove('invalid');
+                    this.classList.add('valid');
+                } else {
+                    nameError.textContent = '';
+                    this.classList.remove('valid');
+                    this.classList.remove('invalid');
+                }
+            });
+
+            // 隐私政策验证
+            const privacyCheckbox = document.getElementById('privacy');
+            privacyCheckbox.addEventListener('change', function () {
+                const privacyError = document.getElementById('privacy-error');
+                if (!this.checked) {
+                    privacyError.textContent = '您需要同意隐私政策才能订阅';
+                } else {
+                    privacyError.textContent = '';
+                }
+            });
+        });
+
+        // 表单提交处理
+        document.getElementById('subscribeForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            clearErrors();
+            showMessage('success', false);
+            showMessage('error', false);
+
+            // 获取表单数据
+            const email = document.getElementById('email').value;
+            const name = document.getElementById('name').value;
+            const privacyChecked = document.getElementById('privacy').checked;
+
+            // 表单验证
+            let isValid = true;
+
+            if (!validateEmail(email)) {
+                document.getElementById('email-error').textContent = '请输入有效的电子邮箱地址';
+                document.getElementById('email').classList.add('invalid');
+                isValid = false;
+            }
+
+            if (name && !validateName(name)) {
+                document.getElementById('name-error').textContent = '姓名至少需要2个字符';
+                document.getElementById('name').classList.add('invalid');
+                isValid = false;
+            }
+
+            if (!privacyChecked) {
+                document.getElementById('privacy-error').textContent = '您需要同意隐私政策才能订阅';
+                isValid = false;
+            }
+
+            // 如果验证通过，提交表单
+            if (isValid) {
+                try {
+                    toggleButtonLoading(true);
+
+                    // 添加调试输出
+                    console.log('准备提交数据:', { email, name, privacy: privacyChecked });
+
+                    // 构建提交数据
+                    const subscriptionData = {
+                        email: email,
+                        name: name,
+                        privacy: privacyChecked
+                    };
+
+                    // 提交数据
+                    console.log('开始提交到API...');
+                    const response = await submitSubscription(subscriptionData);
+                    console.log('API响应:', response);
+
+                    toggleButtonLoading(false);
+
+                    if (response.success) {
+                        // 处理成功响应
+                        showMessage('success', true);
+
+                        // 清空表单
+                        document.getElementById('subscribeForm').reset();
+                        document.getElementById('email').classList.remove('valid');
+                        document.getElementById('name').classList.remove('valid');
+
+                        console.log('订阅成功:', response);
+                    } else {
+                        // 处理业务逻辑错误
+                        showMessage('error', true, response.message || '订阅失败，请稍后再试');
+                        console.error('订阅失败:', response);
+                    }
+
+                } catch (error) {
+                    // 处理网络错误
+                    toggleButtonLoading(false);
+                    showMessage('error', true, error.message);
+                    console.error('订阅过程出错:', error);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
+<script>
+    // 加载header
+    $("#header").load("/components/header.html");
+    // 加载footer
+    $("#footer").load("/components/footer.html");
+</script>
