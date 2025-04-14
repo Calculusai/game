@@ -1,5 +1,8 @@
 # H.AiGame 游戏平台
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+
 H.AiGame 是一个现代化的在线游戏平台,提供丰富的游戏内容和便捷的用户体验。
 
 ## 主要功能
@@ -7,12 +10,12 @@ H.AiGame 是一个现代化的在线游戏平台,提供丰富的游戏内容和�
 - [游戏平台](https://game.hoshinoai.xin)
 
 - 游戏浏览
-[image](./images/index.png)
+![](./images/index.png)
 - 游戏畅玩
 - 订阅通知系统
-[image](./images/dingyue.png)
+![](./images/dingyue.png)
 - 管理员后台
-[image](./images/订阅后端管理.png)
+![](./images/订阅后端管理.png)
 
 ## 技术栈
 
