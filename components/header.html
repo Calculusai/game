@@ -1,18 +1,805 @@
 <!-- 页面头部 -->
 <header class="header">
     <div class="header-container">
-        <a href="index.html" class="logo">
+        <a href="/" class="logo">
             <img src="/images/game.png" alt="Logo" class="logo-icon">
             <span class="logo-text">H.AiGame</span>
         </a>
-        <ul class="nav-menu">
-            <li><a href="/">首页</a></li>
-            <li><a href="https://hoshinoai.xin">博客</a></li>
-            <li><a href="/about/history.html">历程</a></li>
-            <li><a href="/about/subscribe.html">订阅</a></li>
-        </ul>
+        <button class="mobile-menu-button" id="mobile-menu-button" style="display: none;">
+            <i class="fas fa-bars"></i>
+        </button>
+        <nav class="nav-menu">
+            <ul>
+                <li><a href="/">首页</a></li>
+                <li><a href="/user/leaderboard.html">排行榜</a></li>
+                <li><a href="/about/history.html">历程</a></li>
+                <li><a href="/about/subscribe.html">订阅</a></li>
+            </ul>
+        </nav>
         <div class="header-right">
-            <a href="https://github.com/Calculusai" title="GitHub"><i class="fab fa-github"></i></a>
+            <!-- 未登录状态显示 -->
+            <div class="guest-menu" id="guest-menu">
+                <a href="/user/login.html" class="login-btn">登录</a>
+                <a href="/user/register.html" class="register-btn">注册</a>
+            </div>
+            <!-- 已登录状态显示 -->
+            <div id="user-menu" style="display: none;">
+                <div class="user-avatar-wrapper">
+                    <img id="user-avatar" src="/images/game.png" alt="用户头像" class="user-avatar">
+                    <div class="user-dropdown">
+                        <div class="dropdown-username" id="dropdown-username"></div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-menu">
+                            <a href="/user/profile.html" class="dropdown-item">
+                                <i class="fas fa-user-circle"></i> 个人中心
+                            </a>
+                            <a href="/user/leaderboard.html" class="dropdown-item">
+                                <i class="fas fa-trophy"></i> 排行榜
+                            </a>
+                            <a href="#" class="dropdown-item" id="admin-link" style="display: none;">
+                                <i class="fas fa-cogs"></i> 管理后台
+                            </a>
+                            <div class="admin-links" id="admin-submenu"
+                                style="display: none; padding-left: 15px; border-left: 1px solid #eee; margin-left: 8px;">
+                                <a href="/admin/users-manager.html" class="dropdown-item">
+                                    <i class="fas fa-users"></i> 用户管理
+                                </a>
+                                <a href="/admin/games-manager.html" class="dropdown-item">
+                                    <i class="fas fa-gamepad"></i> 游戏管理
+                                </a>
+                                <a href="/about/admin-notify.html" class="dropdown-item">
+                                    <i class="fas fa-bell"></i> 通知管理
+                                </a>
+                            </div>
+                            <a href="#" class="dropdown-item" id="logout-btn">
+                                <i class="fas fa-sign-out-alt"></i> 退出登录
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <a href="https://github.com/Calculusai" title="GitHub" class="github-icon"><i class="fab fa-github"></i></a>
         </div>
     </div>
 </header>
+
+<!-- 移动端菜单 -->
+<div id="mobile-menu" class="mobile-menu">
+    <ul>
+        <li><a href="/">首页</a></li>
+        <li><a href="/user/leaderboard.html">排行榜</a></li>
+        <li><a href="/about/history.html">历程</a></li>
+        <li><a href="/about/subscribe.html">订阅</a></li>
+        <?php if (isAdmin()): ?>
+        <li class="mobile-admin-menu">
+            <a href="#" id="mobile-admin-link">管理 <i class="fas fa-caret-down"></i></a>
+            <ul class="mobile-admin-items" id="mobile-admin-items">
+                <li><a href="/admin/games.php">游戏管理</a></li>
+                <li><a href="/admin/users.php">用户管理</a></li>
+            </ul>
+        </li>
+        <?php endif; ?>
+        <li id="mobile-login-item"><a href="/user/login.html">登录</a></li>
+        <li id="mobile-register-item"><a href="/user/register.html">注册</a></li>
+        <li id="mobile-logout-item" style="display: none;"><a href="#" id="mobile-logout-btn">退出登录</a></li>
+    </ul>
+</div>
+
+<style>
+    /* 头部整体样式 */
+    .header {
+        background-color: #1e2738;
+        background-image: linear-gradient(to right, #1e2738, #2c3e50);
+        color: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        position: relative;
+        z-index: 1000;
+    }
+
+    /* 头部和Logo样式 */
+    .header-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+        height: 60px;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: white;
+        margin-right: 20px;
+    }
+
+    .logo-icon {
+        width: 32px;
+        height: 32px;
+        margin-right: 8px;
+        border-radius: 6px;
+    }
+
+    .logo-text {
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    /* 导航菜单样式 - 横版 */
+    .nav-menu {
+        display: flex;
+        flex: 1;
+        justify-content: center;
+    }
+
+    .nav-menu ul {
+        display: flex;
+        flex-direction: row;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        background: none;
+        border-radius: 30px;
+        border: none;
+        box-shadow: none;
+    }
+
+    .nav-menu ul li {
+        margin: 0 10px;
+    }
+
+    .nav-menu ul li a {
+        color: white;
+        text-decoration: none;
+        font-size: 16px;
+        padding: 6px 15px;
+        display: block;
+        border-radius: 30px;
+        transition: all 0.2s ease;
+        text-align: center;
+        background-color: #232b3b;
+    }
+
+    .nav-menu ul li a:hover {
+        background-color: #2d3953;
+    }
+
+    .guest-menu a {
+        font-size: 16px;
+    }
+
+    /* 响应式设计 - 平板设备 */
+    @media (max-width: 768px) {
+        .nav-menu ul li a {
+            font-size: 16px;
+            padding: 6px 10px;
+        }
+
+        .logo-icon {
+            width: 30px;
+            height: 30px;
+        }
+
+        .login-btn,
+        .register-btn {
+            font-size: 14px;
+            padding: 5px 10px;
+        }
+
+        .logo-text {
+            font-size: 16px;
+        }
+
+        .header-container {
+            height: 55px;
+        }
+    }
+
+    /* 响应式设计 - 移动设备 */
+    @media (max-width: 576px) {
+        .nav-menu ul li a {
+            font-size: 14px;
+            padding: 5px 8px;
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+        }
+
+        .login-btn,
+        .register-btn {
+            font-size: 13px;
+            padding: 4px 8px;
+        }
+
+        .logo-text {
+            font-size: 15px;
+        }
+
+        .github-icon {
+            font-size: 18px;
+        }
+
+        .header-container {
+            height: 50px;
+            padding: 0 10px;
+        }
+
+        .user-avatar {
+            width: 28px;
+            height: 28px;
+        }
+    }
+
+    /* 移动设备优化 */
+    @media (max-width: 760px) {
+        .nav-menu {
+            display: none !important;
+        }
+
+        .mobile-menu-button {
+            display: flex !important;
+            color: #fff;
+            margin-left: 15px;
+        }
+
+        .mobile-menu {
+            top: 50px;
+            /* 适应较小的头部高度 */
+        }
+
+        /* 在手机上隐藏一些较不重要的元素 */
+        .logo-text {
+            max-width: 120px;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .login-btn {
+            padding: 3px 7px;
+            font-size: 12px;
+        }
+
+        .register-btn {
+            padding: 3px 7px;
+            font-size: 12px;
+        }
+    }
+
+    /* 确保汉堡按钮在小屏幕上正确显示 */
+    @media (max-width: 760px) {
+        #mobile-menu-button {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+        }
+    }
+
+    /* 移动菜单样式优化 */
+    .mobile-menu {
+        display: none;
+        position: absolute;
+        top: 50px;
+        left: 0;
+        right: 0;
+        background-color: #1e2738;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        z-index: 999;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        animation: slideDown 0.3s ease;
+        padding-top: 5px;
+    }
+
+    .mobile-menu.active {
+        display: block;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .mobile-menu ul {
+        list-style: none;
+        margin: 0;
+        padding: 10px 0;
+    }
+
+    .mobile-menu ul li {
+        padding: 0;
+        position: relative;
+    }
+
+    .mobile-menu ul li:first-child a {
+        border-top: none;
+        padding-top: 18px;
+    }
+
+    .mobile-menu ul li a {
+        display: block;
+        color: white;
+        padding: 15px 20px;
+        text-decoration: none;
+        font-size: 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 0.2s ease;
+    }
+
+    .mobile-menu ul li a:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+        padding-left: 25px;
+    }
+
+    /* 登录注册项的样式调整 */
+    #mobile-login-item a,
+    #mobile-register-item a,
+    #mobile-logout-item a {
+        padding-top: 15px;
+        padding-bottom: 15px;
+    }
+
+    .mobile-menu-button {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 22px;
+        cursor: pointer;
+        padding: 8px;
+        margin-left: 10px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        border-radius: 4px;
+    }
+
+    .mobile-menu-button:hover {
+        transform: scale(1.1);
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .mobile-menu-button:active {
+        transform: scale(0.95);
+    }
+
+    /* 处理按钮内部图标 */
+    .mobile-menu-button i.fas {
+        font-size: 22px;
+    }
+
+    /* 用户头像和下拉菜单样式 */
+    .user-avatar-wrapper {
+        position: relative;
+        margin-right: 15px;
+        cursor: pointer;
+    }
+
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        transition: border-color 0.3s;
+    }
+
+    .user-avatar-wrapper:hover .user-avatar {
+        border-color: rgba(255, 255, 255, 0.8);
+    }
+
+    .user-dropdown {
+        position: absolute;
+        top: 40px;
+        right: 0;
+        width: 160px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        padding: 10px 0;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+        border: 1px solid #eaeaea;
+        overflow: hidden;
+    }
+
+    .user-dropdown.active {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .dropdown-username {
+        padding: 8px 12px;
+        font-weight: bold;
+        color: #333;
+        text-align: center;
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        background-color: #f8f8f8;
+        margin-bottom: 5px;
+    }
+
+    .dropdown-divider {
+        height: 1px;
+        background-color: #4b2e2e;
+        margin: 6px 0;
+    }
+
+    .dropdown-menu {
+        padding: 5px 0;
+    }
+
+    .dropdown-menu a {
+        font-size: 16px;
+        color: #2c3e50;
+    }
+
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        color: #444;
+        text-decoration: none;
+        transition: background-color 0.2s;
+        font-size: 13px;
+    }
+
+    .dropdown-item:hover {
+        background-color: #f5f5f5;
+        color: #1e2738;
+    }
+
+    .dropdown-item i {
+        margin-right: 8px;
+        width: 16px;
+        text-align: center;
+        font-size: 13px;
+        color: #555;
+    }
+
+    .github-icon {
+        color: white;
+        font-size: 20px;
+        margin-left: 5px;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+    }
+
+    .login-btn,
+    .register-btn {
+        color: white;
+        text-decoration: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        margin-left: 10px;
+        transition: background-color 0.3s;
+    }
+
+    .login-btn {
+        background-color: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .register-btn {
+        background-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .login-btn:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .register-btn:hover {
+        background-color: rgba(255, 255, 255, 0.25);
+    }
+</style>
+
+<script>
+    // 生成基于邮箱的Gravatar头像URL
+    function getGravatarUrl(email, size = 80) {
+        if (!email) return '/images/game.png';
+
+        // 去除空格并转为小写
+        email = email.trim().toLowerCase();
+
+        // MD5哈希函数（简化版本）
+        function MD5(d) {
+            var r = M(V(Y(X(d), 8 * d.length)));
+            return r.toLowerCase()
+        };
+        function M(d) {
+            for (var _, m = "0123456789ABCDEF", f = "", r = 0; r < d.length; r++) _ = d.charCodeAt(r), f += m.charAt(_ >>> 4 & 15) + m.charAt(15 & _);
+            return f
+        };
+        function X(d) {
+            for (var _ = Array(d.length >> 2), m = 0; m < _.length; m++) _[m] = 0;
+            for (m = 0; m < 8 * d.length; m += 8) _[m >> 5] |= (255 & d.charCodeAt(m / 8)) << m % 32;
+            return _
+        };
+        function V(d) {
+            for (var _ = "", m = 0; m < 32 * d.length; m += 8) _ += String.fromCharCode(d[m >> 5] >>> m % 32 & 255);
+            return _
+        };
+        function Y(d, _) {
+            d[_ >> 5] |= 128 << _ % 32, d[14 + (_ + 64 >>> 9 << 4)] = _;
+            for (var m = 1732584193, f = -271733879, r = -1732584194, i = 271733878, n = 0; n < d.length; n += 16) {
+                var h = m, t = f, g = r, e = i;
+                f = md5_ii(f = md5_ii(f = md5_ii(f = md5_ii(f = md5_hh(f = md5_hh(f = md5_hh(f = md5_hh(f = md5_gg(f = md5_gg(f = md5_gg(f = md5_gg(f = md5_ff(f = md5_ff(f = md5_ff(f = md5_ff(f, r = md5_ff(r, i = md5_ff(i, m = md5_ff(m, f, r, i, d[n + 0], 7, -680876936), f, r, d[n + 1], 12, -389564586), m, f, d[n + 2], 17, 606105819), i, m, d[n + 3], 22, -1044525330), r = md5_ff(r, i = md5_ff(i, m = md5_ff(m, f, r, i, d[n + 4], 7, -176418897), f, r, d[n + 5], 12, 1200080426), m, f, d[n + 6], 17, -1473231341), i, m, d[n + 7], 22, -45705983), r = md5_ff(r, i = md5_ff(i, m = md5_ff(m, f, r, i, d[n + 8], 7, 1770035416), f, r, d[n + 9], 12, -1958414417), m, f, d[n + 10], 17, -42063), i, m, d[n + 11], 22, -1990404162), r = md5_ff(r, i = md5_ff(i, m = md5_ff(m, f, r, i, d[n + 12], 7, 1804603682), f, r, d[n + 13], 12, -40341101), m, f, d[n + 14], 17, -1502002290), i, m, d[n + 15], 22, 1236535329), r = md5_gg(r, i = md5_gg(i, m = md5_gg(m, f, r, i, d[n + 1], 5, -165796510), f, r, d[n + 6], 9, -1069501632), m, f, d[n + 11], 14, 643717713), i, m, d[n + 0], 20, -373897302), r = md5_gg(r, i = md5_gg(i, m = md5_gg(m, f, r, i, d[n + 5], 5, -701558691), f, r, d[n + 10], 9, 38016083), m, f, d[n + 15], 14, -660478335), i, m, d[n + 4], 20, -405537848), r = md5_gg(r, i = md5_gg(i, m = md5_gg(m, f, r, i, d[n + 9], 5, 568446438), f, r, d[n + 14], 9, -1019803690), m, f, d[n + 3], 14, -187363961), i, m, d[n + 8], 20, 1163531501), r = md5_gg(r, i = md5_gg(i, m = md5_gg(m, f, r, i, d[n + 13], 5, -1444681467), f, r, d[n + 2], 9, -51403784), m, f, d[n + 7], 14, 1735328473), i, m, d[n + 12], 20, -1926607734), r = md5_hh(r, i = md5_hh(i, m = md5_hh(m, f, r, i, d[n + 5], 4, -378558), f, r, d[n + 8], 11, -2022574463), m, f, d[n + 11], 16, 1839030562), i, m, d[n + 14], 23, -35309556), r = md5_hh(r, i = md5_hh(i, m = md5_hh(m, f, r, i, d[n + 1], 4, -1530992060), f, r, d[n + 4], 11, 1272893353), m, f, d[n + 7], 16, -155497632), i, m, d[n + 10], 23, -1094730640), r = md5_hh(r, i = md5_hh(i, m = md5_hh(m, f, r, i, d[n + 13], 4, 681279174), f, r, d[n + 0], 11, -358537222), m, f, d[n + 3], 16, -722521979), i, m, d[n + 6], 23, 76029189), r = md5_hh(r, i = md5_hh(i, m = md5_hh(m, f, r, i, d[n + 9], 4, -640364487), f, r, d[n + 12], 11, -421815835), m, f, d[n + 15], 16, 530742520), i, m, d[n + 2], 23, -995338651), r = md5_ii(r, i = md5_ii(i, m = md5_ii(m, f, r, i, d[n + 0], 6, -198630844), f, r, d[n + 7], 10, 1126891415), m, f, d[n + 14], 15, -1416354905), i, m, d[n + 5], 21, -57434055), r = md5_ii(r, i = md5_ii(i, m = md5_ii(m, f, r, i, d[n + 12], 6, 1700485571), f, r, d[n + 3], 10, -1894986606), m, f, d[n + 10], 15, -1051523), i, m, d[n + 1], 21, -2054922799), r = md5_ii(r, i = md5_ii(i, m = md5_ii(m, f, r, i, d[n + 8], 6, 1873313359), f, r, d[n + 15], 10, -30611744), m, f, d[n + 6], 15, -1560198380), i, m, d[n + 13], 21, 1309151649), r = md5_ii(r, i = md5_ii(i, m = md5_ii(m, f, r, i, d[n + 4], 6, -145523070), f, r, d[n + 11], 10, -1120210379), m, f, d[n + 2], 15, 718787259), i, m, d[n + 9], 21, -343485551), m = safe_add(m, h), f = safe_add(f, t), r = safe_add(r, g), i = safe_add(i, e)
+            }
+            return Array(m, f, r, i)
+        };
+        function md5_cmn(d, _, m, f, r, i) {
+            return safe_add(bit_rol(safe_add(safe_add(_, d), safe_add(f, i)), r), m)
+        };
+        function md5_ff(d, _, m, f, r, i, n) {
+            return md5_cmn(_ & m | ~_ & f, d, _, r, i, n)
+        };
+        function md5_gg(d, _, m, f, r, i, n) {
+            return md5_cmn(_ & f | m & ~f, d, _, r, i, n)
+        };
+        function md5_hh(d, _, m, f, r, i, n) {
+            return md5_cmn(_ ^ m ^ f, d, _, r, i, n)
+        };
+        function md5_ii(d, _, m, f, r, i, n) {
+            return md5_cmn(m ^ (_ | ~f), d, _, r, i, n)
+        };
+        function safe_add(d, _) {
+            var m = (65535 & d) + (65535 & _);
+            return (d >> 16) + (_ >> 16) + (m >> 16) << 16 | 65535 & m
+        };
+        function bit_rol(d, _) {
+            return d << _ | d >>> 32 - _
+        };
+
+        const hash = MD5(email);
+
+        // 使用国内镜像站点
+        // 可选的国内镜像站点
+        // 1. https://sdn.geekzu.org/avatar/
+        // 2. https://gravatar.loli.net/avatar/
+        // 3. https://cdn.v2ex.com/gravatar/
+
+        return `https://weavatar.com/avatar/${hash}?s=${size}&d=mp`;
+    }
+
+    // 检查用户登录状态
+    function checkLoginStatus() {
+        const userData = localStorage.getItem('user_data');
+        const isAdmin = localStorage.getItem('admin_logged_in') === 'true';
+        console.log('检查登录状态, 有用户数据?', !!userData);
+
+        // 更新移动端菜单登录状态
+        updateMobileMenuLoginState();
+
+        if (userData) {
+            try {
+                const user = JSON.parse(userData);
+
+                // 确保DOM元素已加载
+                const userAvatar = document.getElementById('user-avatar');
+                const dropdownUsername = document.getElementById('dropdown-username');
+                const guestMenu = document.getElementById('guest-menu');
+                const userMenu = document.getElementById('user-menu');
+
+                if (userAvatar && dropdownUsername && guestMenu && userMenu) {
+                    // 更新头像
+                    const avatarUrl = user.email ? getGravatarUrl(user.email) : '/images/game.png';
+                    userAvatar.src = avatarUrl;
+
+                    // 添加图片加载错误处理，如果主镜像站点加载失败，尝试备用镜像
+                    userAvatar.onerror = function () {
+                        console.log('主镜像头像加载失败，尝试备用镜像');
+                        if (user.email) {
+                            const hash = MD5(user.email.trim().toLowerCase());
+                            // 尝试另一个镜像站点
+                            this.src = `https://gravatar.loli.net/avatar/${hash}?s=80&d=mp`;
+
+                            // 如果备用镜像也失败，使用本地默认头像
+                            this.onerror = function () {
+                                console.log('备用镜像也加载失败，使用默认头像');
+                                this.src = '/images/game.png';
+                                // 防止无限循环
+                                this.onerror = null;
+                            };
+                        } else {
+                            this.src = '/images/game.png';
+                            this.onerror = null;
+                        }
+                    };
+
+                    // 更新用户名
+                    dropdownUsername.textContent = user.username;
+
+                    // 显示用户菜单，隐藏访客菜单
+                    guestMenu.style.display = 'none';
+                    userMenu.style.display = 'flex';
+
+                    console.log('用户已登录:', user.username);
+                    console.log('用户头像URL:', avatarUrl);
+
+                    // 显示管理员入口（如果是管理员）
+                    if (isAdmin) {
+                        const adminLink = document.getElementById('admin-link');
+                        const adminSubmenu = document.getElementById('admin-submenu');
+                        adminLink.style.display = 'flex';
+                        adminSubmenu.style.display = 'block';
+
+                        // 点击管理后台显示/隐藏子菜单
+                        adminLink.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            adminSubmenu.style.display = adminSubmenu.style.display === 'none' ? 'block' : 'none';
+                        });
+                    }
+                } else {
+                    console.warn('DOM元素未加载完成，稍后重试');
+                    setTimeout(checkLoginStatus, 300);
+                }
+            } catch (e) {
+                console.error('Failed to parse user data:', e);
+                localStorage.removeItem('user_data');
+
+                const guestMenu = document.getElementById('guest-menu');
+                const userMenu = document.getElementById('user-menu');
+
+                if (guestMenu && userMenu) {
+                    guestMenu.style.display = 'flex';
+                    userMenu.style.display = 'none';
+                }
+            }
+        } else {
+            const guestMenu = document.getElementById('guest-menu');
+            const userMenu = document.getElementById('user-menu');
+
+            if (guestMenu && userMenu) {
+                guestMenu.style.display = 'flex';
+                userMenu.style.display = 'none';
+            }
+        }
+    }
+
+    // 等待jQuery加载完成
+    $(document).ready(function () {
+        console.log('jQuery文档加载完成，初始化用户状态');
+        // 立即检查登录状态
+        checkLoginStatus();
+
+        // 初始化移动端菜单
+        initMobileMenu();
+
+        // 点击头像切换下拉菜单
+        $('#user-avatar').on('click', function (e) {
+            e.stopPropagation();
+            $('.user-dropdown').toggleClass('active');
+        });
+
+        // 点击页面其他地方关闭下拉菜单
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('.user-dropdown').length) {
+                $('.user-dropdown').removeClass('active');
+            }
+
+            // 如果点击的不是移动菜单按钮或菜单本身，则关闭移动菜单
+            if (!$(e.target).closest('#mobile-menu-button').length &&
+                !$(e.target).closest('#mobile-menu').length) {
+                $('#mobile-menu').removeClass('active');
+            }
+        });
+
+        // 绑定退出登录按钮事件
+        $('#logout-btn, #mobile-logout-btn').on('click', function (e) {
+            e.preventDefault();
+            console.log('退出登录按钮被点击');
+
+            fetch('/api/logout.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('退出登录成功');
+                        localStorage.removeItem('user_data');
+                        checkLoginStatus();
+                        // 如果在需要登录的页面，则跳转到首页
+                        if (window.location.pathname.startsWith('/user/profile') ||
+                            window.location.pathname.includes('leaderboard')) {
+                            window.location.href = '/';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Logout error:', error);
+                });
+        });
+
+        // 每隔1秒检查一次，确保页面上的用户状态正确
+        setTimeout(checkLoginStatus, 1000);
+    });
+
+    // 初始化移动端菜单
+    function initMobileMenu() {
+        // 立即判断屏幕宽度并设置相应状态
+        checkMobileState();
+
+        // 窗口大小改变时重新检查
+        $(window).on('resize', function () {
+            checkMobileState();
+        });
+
+        // 点击汉堡菜单按钮显示/隐藏菜单
+        $('#mobile-menu-button').on('click', function (e) {
+            e.stopPropagation(); // 阻止事件冒泡
+            $('#mobile-menu').toggleClass('active');
+            console.log('汉堡菜单按钮被点击，切换菜单显示');
+        });
+
+        // 点击移动端管理菜单切换子菜单
+        $('#mobile-admin-link').on('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation(); // 阻止事件冒泡
+            $('#mobile-admin-items').toggle();
+        });
+
+        // 更新移动端菜单的登录状态
+        updateMobileMenuLoginState();
+    }
+
+    // 检查移动设备状态并设置
+    function checkMobileState() {
+        const isMobile = window.innerWidth <= 760;
+        console.log('检查移动设备状态，屏幕宽度：', window.innerWidth, '是移动设备？', isMobile);
+
+        if (isMobile) {
+            $('.nav-menu').css('display', 'none');
+            $('#mobile-menu-button').css('display', 'flex');
+        } else {
+            $('.nav-menu').css('display', 'flex');
+            $('#mobile-menu-button').css('display', 'none');
+            $('#mobile-menu').removeClass('active');
+        }
+    }
+
+    // 更新移动端菜单的登录状态
+    function updateMobileMenuLoginState() {
+        const userData = localStorage.getItem('user_data');
+        const isAdmin = localStorage.getItem('admin_logged_in') === 'true';
+
+        if (userData) {
+            // 用户已登录
+            $('#mobile-login-item, #mobile-register-item').hide();
+            $('#mobile-logout-item').show();
+
+            // 如果是管理员，显示管理菜单
+            if (isAdmin) {
+                $('.mobile-admin-menu').show();
+            } else {
+                $('.mobile-admin-menu').hide();
+            }
+        } else {
+            // 用户未登录
+            $('#mobile-login-item, #mobile-register-item').show();
+            $('#mobile-logout-item').hide();
+            $('.mobile-admin-menu').hide();
+        }
+    }
+</script>

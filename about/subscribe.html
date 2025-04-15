@@ -5,12 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>订阅服务 - HoshinoAI</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/about.css">
     <link rel="icon" href="/images/game.png" type="image/svg+xml">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <!-- 引入jQuery -->
-    <script src="/js/jquery-3.6.0.min.js"></script>
+    <script src="/assets/js/jquery-3.6.0.min.js"></script>
 </head>
 
 <body>
@@ -89,6 +89,10 @@
     <div id="footer"></div>
 
     <script>
+        // 加载header
+        $("#header").load("/components/header.html");
+        // 加载footer
+        $("#footer").load("/components/footer.html");
         // 表单验证函数
         function validateEmail(email) {
             const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -307,9 +311,3 @@
 </body>
 
 </html>
-<script>
-    // 加载header
-    $("#header").load("/components/header.html");
-    // 加载footer
-    $("#footer").load("/components/footer.html");
-</script>

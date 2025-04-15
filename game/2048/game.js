@@ -6,17 +6,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const GRID_SIZE = 4;
     const CELL_GAP = 15;
 
-    // 游戏状态
-    let grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
-    let score = 0;
-    let bestScore = parseInt(localStorage.getItem('bestScore')) || 0;
-
     // DOM元素
     const gameBoard = document.getElementById('game-board');
     const backgroundGrid = document.getElementById('background-grid');
     const scoreDisplay = document.getElementById('score');
     const bestScoreDisplay = document.getElementById('best-score');
     const messageContainer = document.getElementById('game-message');
+    const leaderboardButton = document.getElementById('leaderboard-button');
+    const leaderboardModal = document.getElementById('leaderboard-modal');
+    const closeLeaderboardButton = document.getElementById('close-leaderboard');
+    const saveScoreButton = document.getElementById('save-score');
+
+    // 游戏状态
+    let grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
+    let score = 0;
+    // 从本地存储中读取最高分，确保在游戏开始前就有值
+    let bestScore = parseInt(localStorage.getItem('bestScore')) || 0;
+    bestScoreDisplay.textContent = bestScore; // 立即显示本地存储的最高分
+    let gameOver = false;
+    let gameWon = false;
 
     // 初始化游戏
     initGame();
@@ -26,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('retry').addEventListener('click', initGame);
     document.getElementById('home-button').addEventListener('click', goToHomePage);
     document.addEventListener('keydown', handleKeyPress);
+    leaderboardButton.addEventListener('click', showLeaderboard);
+    closeLeaderboardButton.addEventListener('click', hideLeaderboard);
+    saveScoreButton.addEventListener('click', () => saveScore(false));
     setupTouchEvents();
 
     /**
@@ -35,8 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // 重置游戏状态
         grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
         score = 0;
-        updateScore();
-        messageContainer.classList.remove('show');
+        gameOver = false;
+        gameWon = false;
 
         // 清除方块
         clearTiles();
@@ -47,9 +58,62 @@ document.addEventListener('DOMContentLoaded', () => {
         // 更新尺寸
         updateTileSize();
 
-        // 添加初始方块
-        addRandomTile();
-        addRandomTile();
+        // 获取用户最高分并初始化显示
+        getUserBestScore().then(() => {
+            // 确保最高分显示已更新
+            bestScoreDisplay.textContent = bestScore;
+
+            // 更新当前分数显示
+            scoreDisplay.textContent = score;
+
+            // 添加初始方块
+            addRandomTile();
+            addRandomTile();
+        });
+
+        // 重置保存分数按钮
+        saveScoreButton.disabled = false;
+        saveScoreButton.textContent = '保存分数';
+
+        // 隐藏游戏消息
+        messageContainer.classList.remove('show');
+    }
+
+    /**
+     * 获取用户最高分
+     * @returns {Promise} 返回一个Promise，在获取完成后解析
+     */
+    function getUserBestScore() {
+        // 首先设置本地存储的最高分
+        bestScore = parseInt(localStorage.getItem('bestScore')) || 0;
+        bestScoreDisplay.textContent = bestScore;
+
+        // 检查用户是否登录
+        const userData = localStorage.getItem('user_data');
+
+        if (!userData) {
+            return Promise.resolve(); // 如果用户未登录，立即解析Promise
+        }
+
+        const user = JSON.parse(userData);
+
+        // 获取用户在2048游戏的最高分
+        return fetch(`/api/get_leaderboard.php?game_slug=2048&user_id=${user.id}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.user_best_score && data.user_best_score.best_score) {
+                    // 设置用户最高分
+                    const userBestScore = parseInt(data.user_best_score.best_score);
+                    if (userBestScore > bestScore) {
+                        bestScore = userBestScore;
+                        localStorage.setItem('bestScore', bestScore);
+                        bestScoreDisplay.textContent = bestScore;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('获取用户最高分错误:', error);
+            });
     }
 
     /**
@@ -565,15 +629,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * 更新分数显示
+     * 更新得分显示
      */
     function updateScore() {
+        // 更新当前分数显示
         scoreDisplay.textContent = score;
 
+        // 先确保bestScore值正确
+        const storedBestScore = parseInt(localStorage.getItem('bestScore')) || 0;
+        if (storedBestScore > bestScore) {
+            bestScore = storedBestScore;
+        }
+
+        // 更新最高分
         if (score > bestScore) {
             bestScore = score;
             localStorage.setItem('bestScore', bestScore);
-            bestScoreDisplay.textContent = bestScore;
+        }
+
+        // 总是更新最高分显示
+        bestScoreDisplay.textContent = bestScore;
+
+        // 如果是登录用户，并且已经超过了之前的最高分，提示保存
+        if (score > bestScore && localStorage.getItem('user_data') && !gameOver) {
+            saveScoreButton.disabled = false;
+            saveScoreButton.textContent = '保存新纪录';
         }
     }
 
@@ -581,38 +661,58 @@ document.addEventListener('DOMContentLoaded', () => {
      * 检查游戏状态
      */
     function checkGameStatus() {
-        // 检查是否达到2048
-        for (let row = 0; row < GRID_SIZE; row++) {
-            for (let col = 0; col < GRID_SIZE; col++) {
-                if (grid[row][col] === 2048) {
-                    showMessage('恭喜获胜！');
-                    return;
+        // 检查是否胜利 (达到2048)
+        let won = false;
+        for (let y = 0; y < 4; y++) {
+            for (let x = 0; x < 4; x++) {
+                if (grid[y][x] === 2048 && !gameWon) {
+                    gameWon = true;
+                    won = true;
+                    break;
+                }
+            }
+            if (won) break;
+        }
+
+        if (won) {
+            showMessage("恭喜你，达到2048！");
+            // 游戏胜利，自动保存分数
+            saveScore(true);
+            return;
+        }
+
+        // 检查是否还有空格子
+        for (let y = 0; y < 4; y++) {
+            for (let x = 0; x < 4; x++) {
+                if (grid[y][x] === 0) {
+                    return; // 仍有空格子，游戏继续
                 }
             }
         }
 
-        // 检查是否还有空格子
-        for (let row = 0; row < GRID_SIZE; row++) {
-            for (let col = 0; col < GRID_SIZE; col++) {
-                if (grid[row][col] === 0) return;
+        // 检查是否有相邻的相同数字
+        for (let y = 0; y < 4; y++) {
+            for (let x = 0; x < 3; x++) {
+                if (grid[y][x] === grid[y][x + 1]) {
+                    return; // 有水平相邻相同数字，游戏继续
+                }
             }
         }
 
-        // 检查是否还能移动
-        for (let row = 0; row < GRID_SIZE; row++) {
-            for (let col = 0; col < GRID_SIZE - 1; col++) {
-                if (grid[row][col] === grid[row][col + 1]) return;
+        for (let x = 0; x < 4; x++) {
+            for (let y = 0; y < 3; y++) {
+                if (grid[y][x] === grid[y + 1][x]) {
+                    return; // 有垂直相邻相同数字，游戏继续
+                }
             }
         }
 
-        for (let col = 0; col < GRID_SIZE; col++) {
-            for (let row = 0; row < GRID_SIZE - 1; row++) {
-                if (grid[row][col] === grid[row + 1][col]) return;
-            }
-        }
+        // 如果没有空格子且没有可合并的方块，游戏结束
+        gameOver = true;
+        showMessage("游戏结束！");
 
-        // 游戏结束
-        showMessage('游戏结束！');
+        // 游戏结束，自动保存分数
+        saveScore(true);
     }
 
     /**
@@ -627,8 +727,179 @@ document.addEventListener('DOMContentLoaded', () => {
      * 返回首页
      */
     function goToHomePage() {
-        // 跳转到首页
-        window.location.href = "/index.html";
+        window.location.href = '/';
+    }
+
+    /**
+     * 显示排行榜
+     */
+    function showLeaderboard() {
+        // 显示模态框
+        leaderboardModal.style.display = 'block';
+
+        // 清空并显示加载中
+        document.getElementById('leaderboard-body').innerHTML = '';
+        document.getElementById('leaderboard-loading').style.display = 'block';
+        document.getElementById('leaderboard-content').style.display = 'none';
+
+        // 获取排行榜数据
+        fetch('/api/get_leaderboard.php?game_slug=2048')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('leaderboard-loading').style.display = 'none';
+                document.getElementById('leaderboard-content').style.display = 'block';
+
+                if (data.success) {
+                    // 填充排行榜
+                    const tbody = document.getElementById('leaderboard-body');
+                    tbody.innerHTML = '';
+
+                    if (data.leaderboard && data.leaderboard.length > 0) {
+                        data.leaderboard.forEach((entry, index) => {
+                            const row = document.createElement('tr');
+
+                            const rankCell = document.createElement('td');
+                            rankCell.textContent = index + 1;
+
+                            const usernameCell = document.createElement('td');
+                            usernameCell.textContent = entry.username;
+
+                            const scoreCell = document.createElement('td');
+                            scoreCell.textContent = entry.score;
+
+                            const dateCell = document.createElement('td');
+                            const date = new Date(entry.played_at);
+                            dateCell.textContent = date.toLocaleDateString();
+
+                            row.appendChild(rankCell);
+                            row.appendChild(usernameCell);
+                            row.appendChild(scoreCell);
+                            row.appendChild(dateCell);
+
+                            tbody.appendChild(row);
+                        });
+                    } else {
+                        const row = document.createElement('tr');
+                        const cell = document.createElement('td');
+                        cell.colSpan = 4;
+                        cell.style.textAlign = 'center';
+                        cell.textContent = '暂无排行榜数据';
+                        row.appendChild(cell);
+                        tbody.appendChild(row);
+                    }
+
+                    // 显示用户最佳分数
+                    if (data.user_best_score && data.user_best_score.best_score) {
+                        document.getElementById('user-best-score').style.display = 'block';
+                        document.getElementById('user-best-score-value').textContent = data.user_best_score.best_score;
+                        document.getElementById('login-required').style.display = 'none';
+                    } else {
+                        // 检查用户是否登录
+                        const userData = localStorage.getItem('user_data');
+                        if (userData) {
+                            document.getElementById('user-best-score').style.display = 'block';
+                            document.getElementById('user-best-score-value').textContent = '0';
+                        } else {
+                            document.getElementById('login-required').style.display = 'block';
+                            document.getElementById('user-best-score').style.display = 'none';
+                        }
+                    }
+                } else {
+                    // 显示错误信息
+                    const tbody = document.getElementById('leaderboard-body');
+                    tbody.innerHTML = '';
+                    const row = document.createElement('tr');
+                    const cell = document.createElement('td');
+                    cell.colSpan = 4;
+                    cell.style.textAlign = 'center';
+                    cell.textContent = '获取排行榜失败';
+                    row.appendChild(cell);
+                    tbody.appendChild(row);
+                }
+            })
+            .catch(error => {
+                console.error('获取排行榜错误:', error);
+                document.getElementById('leaderboard-loading').style.display = 'none';
+                document.getElementById('leaderboard-content').style.display = 'block';
+
+                const tbody = document.getElementById('leaderboard-body');
+                tbody.innerHTML = '';
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 4;
+                cell.style.textAlign = 'center';
+                cell.textContent = '网络错误，请稍后再试';
+                row.appendChild(cell);
+                tbody.appendChild(row);
+            });
+    }
+
+    /**
+     * 隐藏排行榜
+     */
+    function hideLeaderboard() {
+        leaderboardModal.style.display = 'none';
+    }
+
+    /**
+     * 保存分数
+     * @param {boolean} autoSave - 是否自动保存（游戏结束时）
+     */
+    function saveScore(autoSave = false) {
+        // 检查用户是否登录
+        const userData = localStorage.getItem('user_data');
+
+        if (!userData) {
+            // 未登录，提示用户登录
+            if (!autoSave && confirm('保存分数需要登录，是否前往登录页面？')) {
+                window.location.href = '/user/login.html';
+            }
+            return;
+        }
+
+        const user = JSON.parse(userData);
+
+        // 已登录，提交分数
+        fetch('/api/submit_score.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                game_slug: '2048',
+                score: score,
+                user_id: user.id
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (!autoSave) {
+                        alert('分数保存成功！');
+                        saveScoreButton.disabled = true;
+                        saveScoreButton.textContent = '已保存';
+                    } else {
+                        console.log('游戏结束，分数自动保存成功');
+                    }
+
+                    // 刷新排行榜
+                    if (document.getElementById('leaderboard-modal').style.display === 'block') {
+                        showLeaderboard();
+                    }
+                } else {
+                    if (!autoSave) {
+                        alert('分数保存失败：' + (data.message || '未知错误'));
+                    } else {
+                        console.error('自动保存分数失败:', data.message);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('保存分数错误:', error);
+                if (!autoSave) {
+                    alert('网络错误，请稍后再试');
+                }
+            });
     }
 
     // 监听窗口大小变化
@@ -637,3 +908,11 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGrid();
     });
 });
+
+// 点击模态框外部关闭模态框
+window.onclick = function (event) {
+    const leaderboardModal = document.getElementById('leaderboard-modal');
+    if (event.target === leaderboardModal) {
+        leaderboardModal.style.display = 'none';
+    }
+};

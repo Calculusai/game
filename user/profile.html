@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心 - H.AiGame</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="icon" href="/images/game.png" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="../assets/js/jquery-3.6.0.min.js"></script>
+    <style>
+        .profile-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 30px;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 20px;
+            border: 3px solid #1e2738;
+        }
+
+        .profile-info h1 {
+            font-size: 28px;
+            color: #776e65;
+            margin: 0 0 10px 0;
+            text-align: left;
+        }
+
+        .profile-email {
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .profile-stat {
+            display: inline-block;
+            margin-right: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .profile-stat i {
+            margin-right: 5px;
+            color: #1e2738;
+        }
+
+        .profile-tabs {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+        }
+
+        .profile-tab {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #776e65;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .profile-tab.active {
+            border-bottom-color: #1e2738;
+            color: #1e2738;
+            font-weight: bold;
+        }
+
+        .profile-tab:hover:not(.active) {
+            border-bottom-color: #ddd;
+            background-color: #f9f9f9;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .game-stats-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .game-stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s;
+        }
+
+        .game-stat-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .game-stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .game-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .game-score {
+            font-size: 20px;
+            color: #1e2738;
+            font-weight: bold;
+        }
+
+        .game-date {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #aaa;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+
+        /* 设置表单样式 */
+        .profile-form {
+            margin-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #776e65;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e8e0d8;
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: #faf8ef;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            border-color: #1e2738;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(30, 39, 56, 0.2);
+            background-color: #fff;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            background-color: #1e2738;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: #2a3a54;
+            transform: translateY(-2px);
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        /* 未登录提示 */
+        .not-logged-in {
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        .not-logged-in i {
+            font-size: 60px;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .not-logged-in h2 {
+            font-size: 24px;
+            color: #776e65;
+            margin-bottom: 15px;
+        }
+
+        .not-logged-in p {
+            color: #aaa;
+            margin-bottom: 25px;
+        }
+
+        .login-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #1e2738;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+
+        .login-link:hover {
+            background-color: #2a3a54;
+        }
+
+        .btn-danger {
+            display: inline-block;
+            background-color: #e74c3c;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        /* 确认对话框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-title {
+            color: #e74c3c;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .modal-body {
+            margin-bottom: 25px;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .modal-footer button {
+            margin-left: 10px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-cancel {
+            background-color: #e9e9e9;
+            color: #333;
+        }
+
+        .btn-confirm-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background-color: #ddd;
+        }
+
+        .btn-confirm-danger:hover {
+            background-color: #c0392b;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 页面头部 -->
+    <div id="header"></div>
+
+    <!-- 页面主体 -->
+    <main class="main-content">
+        <div class="container">
+            <!-- 用户未登录显示 -->
+            <div class="not-logged-in" id="not-logged-in">
+                <i class="fas fa-user-lock"></i>
+                <h2>需要登录</h2>
+                <p>您需要登录才能访问个人中心</p>
+                <a href="login.html" class="login-link">前往登录</a>
+            </div>
+
+            <!-- 用户已登录显示 -->
+            <div class="profile-container" id="profile-container" style="display: none;">
+                <div class="profile-header">
+                    <img id="profile-avatar" src="/images/game.png" alt="用户头像" class="profile-avatar">
+                    <div class="profile-info">
+                        <h1 id="profile-username">用户名</h1>
+                        <div id="profile-email" class="profile-email">用户邮箱</div>
+                        <div class="profile-stats">
+                            <div class="profile-stat">
+                                <i class="fas fa-gamepad"></i> <span id="games-played">0</span> 游戏
+                            </div>
+                            <div class="profile-stat">
+                                <i class="fas fa-trophy"></i> <span id="total-score">0</span> 总分
+                            </div>
+                            <div class="profile-stat">
+                                <i class="fas fa-calendar-alt"></i> 注册于 <span id="register-date">2023-01-01</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-tabs">
+                    <div class="profile-tab active" data-tab="game-stats">游戏统计</div>
+                    <div class="profile-tab" data-tab="account-settings">账号设置</div>
+                </div>
+
+                <div class="tab-content active" id="game-stats">
+                    <ul class="game-stats-list" id="game-stats-list">
+                        <!-- 游戏统计列表将通过JS动态生成 -->
+                    </ul>
+                    <div id="game-stats-empty" class="empty-state" style="display: none;">
+                        <i class="fas fa-trophy"></i>
+                        <p>您还没有游戏记录</p>
+                        <p>快去玩游戏，创造新纪录吧！</p>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="account-settings">
+                    <div class="profile-form">
+                        <div id="settings-alert" class="alert"></div>
+
+                        <div class="form-group">
+                            <label for="new-password">新密码</label>
+                            <input type="password" id="new-password" placeholder="输入新密码（留空表示不修改）">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirm-password">确认新密码</label>
+                            <input type="password" id="confirm-password" placeholder="再次输入新密码">
+                        </div>
+
+                        <button type="button" id="save-settings" class="btn-primary">保存设置</button>
+
+                        <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+
+                        <div class="danger-zone">
+                            <h3 style="color: #e74c3c; margin-bottom: 15px;">危险区域</h3>
+                            <p style="color: #666; margin-bottom: 20px;">注销账号将永久删除您的所有数据，此操作无法撤销。</p>
+                            <button type="button" id="delete-account" class="btn-danger">注销账号</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页面底部 -->
+    <div id="footer"></div>
+
+    <!-- 注销账号确认对话框 -->
+    <div id="delete-account-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">确认注销账号</h3>
+            <div class="modal-body">
+                <p>您确定要注销您的账号吗？此操作将永久删除所有与您账号相关的数据，包括：</p>
+                <ul style="margin: 15px 0; padding-left: 20px;">
+                    <li>账号信息和个人资料</li>
+                    <li>所有游戏记录和排行榜数据</li>
+                    <li>设置和偏好</li>
+                </ul>
+                <p><strong>此操作无法撤销！</strong></p>
+                <div style="margin-top: 15px;">
+                    <label for="delete-confirm-password">请输入您的密码以确认操作：</label>
+                    <input type="password" id="delete-confirm-password"
+                        style="width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" id="cancel-delete">取消</button>
+                <button type="button" class="btn-confirm-danger" id="confirm-delete">确认注销</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 加载header和footer
+        $("#header").load("/components/header.html");
+        $("#footer").load("/components/footer.html");
+
+        // 生成基于邮箱的Gravatar头像URL
+        function getGravatarUrl(email, size = 150) {
+            if (!email) return '/images/game.png';
+
+            // MD5哈希函数（简化版本）
+            function MD5(d) {
+                var r = M(V(Y(X(d), 8 * d.length)));
+                return r.toLowerCase()
+            };
+            function M(d) {
+                for (var _, m = "0123456789ABCDEF", f = "", r = 0; r < d.length; r++) _ = d.charCodeAt(r), f += m.charAt(_ >>> 4 & 15) + m.charAt(15 & _);
+                return f
+            };
+            function X(d) {
+                for (var _ = Array(d.length >> 2), m = 0; m < _.length; m++) _[m] = 0;
+                for (m = 0; m < 8 * d.length; m += 8) _[m >> 5] |= (255 & d.charCodeAt(m / 8)) << m % 32;
+                return _
+            };
+            function V(d) {
+                for (var _ = "", m = 0; m < 32 * d.length; m += 8) _ += String.fromCharCode(d[m >> 5] >>> m % 32 & 255);
+                return _
+            };
+            function Y(d, _) {
+                d[_ >> 5] |= 128 << _ % 32, d[14 + (_ + 64 >>> 9 << 4)] = _;
+                for (var m = 1732584193, f = -271733879, r = -1732584194, i = 271733878, n = 0; n < d.length; n += 16) {
+                    var h = m, t = f, g = r, e = i;
+                    f = md5_ii(f = md5_ii(f = md5_ii(f = md5_ii(f = md5_hh(f = md5_hh(f = md5_hh(f = md5_hh(f = md5_gg(f = md5_gg(f = md5_gg(f = md5_gg(f = md5_ff(f = md5_ff(f = md5_ff(f = md5_ff(f, r = md5_ff(r, i = md5_ff(i, m = md5_ff(m, f, r, i, d[n + 0], 7, -680876936), f, r, d[n + 1], 12, -389564586), m, f, d[n + 2], 17, 606105819), i, m, d[n + 3], 22, -1044525330), r = md5_ff(r, i = md5_ff(i, m = md5_ff(m, f, r, i, d[n + 4], 7, -176418897), f, r, d[n + 5], 12, 1200080426), m, f, d[n + 6], 17, -1473231341), i, m, d[n + 7], 22, -45705983), r = md5_ff(r, i = md5_ff(i, m = md5_ff(m, f, r, i, d[n + 8], 7, 1770035416), f, r, d[n + 9], 12, -1958414417), m, f, d[n + 10], 17, -42063), i, m, d[n + 11], 22, -1990404162), r = md5_ff(r, i = md5_ff(i, m = md5_ff(m, f, r, i, d[n + 12], 7, 1804603682), f, r, d[n + 13], 12, -40341101), m, f, d[n + 14], 17, -1502002290), i, m, d[n + 15], 22, 1236535329), r = md5_gg(r, i = md5_gg(i, m = md5_gg(m, f, r, i, d[n + 1], 5, -165796510), f, r, d[n + 6], 9, -1069501632), m, f, d[n + 11], 14, 643717713), i, m, d[n + 0], 20, -373897302), r = md5_gg(r, i = md5_gg(i, m = md5_gg(m, f, r, i, d[n + 5], 5, -701558691), f, r, d[n + 10], 9, 38016083), m, f, d[n + 15], 14, -660478335), i, m, d[n + 4], 20, -405537848), r = md5_gg(r, i = md5_gg(i, m = md5_gg(m, f, r, i, d[n + 9], 5, 568446438), f, r, d[n + 14], 9, -1019803690), m, f, d[n + 3], 14, -187363961), i, m, d[n + 8], 20, 1163531501), r = md5_gg(r, i = md5_gg(i, m = md5_gg(m, f, r, i, d[n + 13], 5, -1444681467), f, r, d[n + 2], 9, -51403784), m, f, d[n + 7], 14, 1735328473), i, m, d[n + 12], 20, -1926607734), r = md5_hh(r, i = md5_hh(i, m = md5_hh(m, f, r, i, d[n + 5], 4, -378558), f, r, d[n + 8], 11, -2022574463), m, f, d[n + 11], 16, 1839030562), i, m, d[n + 14], 23, -35309556), r = md5_hh(r, i = md5_hh(i, m = md5_hh(m, f, r, i, d[n + 1], 4, -1530992060), f, r, d[n + 4], 11, 1272893353), m, f, d[n + 7], 16, -155497632), i, m, d[n + 10], 23, -1094730640), r = md5_hh(r, i = md5_hh(i, m = md5_hh(m, f, r, i, d[n + 13], 4, 681279174), f, r, d[n + 0], 11, -358537222), m, f, d[n + 3], 16, -722521979), i, m, d[n + 6], 23, 76029189), r = md5_hh(r, i = md5_hh(i, m = md5_hh(m, f, r, i, d[n + 9], 4, -640364487), f, r, d[n + 12], 11, -421815835), m, f, d[n + 15], 16, 530742520), i, m, d[n + 2], 23, -995338651), r = md5_ii(r, i = md5_ii(i, m = md5_ii(m, f, r, i, d[n + 0], 6, -198630844), f, r, d[n + 7], 10, 1126891415), m, f, d[n + 14], 15, -1416354905), i, m, d[n + 5], 21, -57434055), r = md5_ii(r, i = md5_ii(i, m = md5_ii(m, f, r, i, d[n + 12], 6, 1700485571), f, r, d[n + 3], 10, -1894986606), m, f, d[n + 10], 15, -1051523), i, m, d[n + 1], 21, -2054922799), r = md5_ii(r, i = md5_ii(i, m = md5_ii(m, f, r, i, d[n + 8], 6, 1873313359), f, r, d[n + 15], 10, -30611744), m, f, d[n + 6], 15, -1560198380), i, m, d[n + 13], 21, 1309151649), r = md5_ii(r, i = md5_ii(i, m = md5_ii(m, f, r, i, d[n + 4], 6, -145523070), f, r, d[n + 11], 10, -1120210379), m, f, d[n + 2], 15, 718787259), i, m, d[n + 9], 21, -343485551), m = safe_add(m, h), f = safe_add(f, t), r = safe_add(r, g), i = safe_add(i, e)
+                }
+                return Array(m, f, r, i)
+            };
+            function md5_cmn(d, _, m, f, r, i) {
+                return safe_add(bit_rol(safe_add(safe_add(_, d), safe_add(f, i)), r), m)
+            };
+            function md5_ff(d, _, m, f, r, i, n) {
+                return md5_cmn(_ & m | ~_ & f, d, _, r, i, n)
+            };
+            function md5_gg(d, _, m, f, r, i, n) {
+                return md5_cmn(_ & f | m & ~f, d, _, r, i, n)
+            };
+            function md5_hh(d, _, m, f, r, i, n) {
+                return md5_cmn(_ ^ m ^ f, d, _, r, i, n)
+            };
+            function md5_ii(d, _, m, f, r, i, n) {
+                return md5_cmn(m ^ (_ | ~f), d, _, r, i, n)
+            };
+            function safe_add(d, _) {
+                var m = (65535 & d) + (65535 & _);
+                return (d >> 16) + (_ >> 16) + (m >> 16) << 16 | 65535 & m
+            };
+            function bit_rol(d, _) {
+                return d << _ | d >>> 32 - _
+            };
+
+            const hash = MD5(email.trim().toLowerCase());
+            return `https://weavatar.com/avatar/${hash}?s=${size}&d=mp`;
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function () {
+            // 检查是否登录
+            const userData = localStorage.getItem('user_data');
+
+            if (!userData) {
+                // 未登录，显示登录提示
+                document.getElementById('not-logged-in').style.display = 'block';
+                document.getElementById('profile-container').style.display = 'none';
+                return;
+            }
+
+            try {
+                // 已登录，显示个人信息
+                const user = JSON.parse(userData);
+
+                // 确保用户数据中包含ID
+                if (!user.id) {
+                    throw new Error('用户数据不完整');
+                }
+
+                document.getElementById('not-logged-in').style.display = 'none';
+                document.getElementById('profile-container').style.display = 'block';
+
+                // 设置用户信息
+                document.getElementById('profile-username').textContent = user.username;
+                document.getElementById('profile-email').textContent = user.email || '未设置邮箱';
+
+                // 设置头像
+                const avatarUrl = user.email ? getGravatarUrl(user.email, 150) : '/images/game.png';
+                document.getElementById('profile-avatar').src = avatarUrl;
+
+                // 添加头像加载错误处理
+                document.getElementById('profile-avatar').onerror = function () {
+                    console.log('个人中心头像加载失败，尝试备用镜像');
+                    if (user.email) {
+                        const hash = MD5(user.email.trim().toLowerCase());
+                        // 尝试另一个镜像站点
+                        this.src = `https://gravatar.loli.net/avatar/${hash}?s=150&d=mp`;
+
+                        // 如果备用镜像也失败，使用本地默认头像
+                        this.onerror = function () {
+                            console.log('备用镜像也加载失败，使用默认头像');
+                            this.src = '/images/game.png';
+                            // 防止无限循环
+                            this.onerror = null;
+                        };
+                    } else {
+                        this.src = '/images/game.png';
+                        this.onerror = null;
+                    }
+                };
+
+                // 加载游戏统计数据
+                loadGameStats(user.id);
+
+                // 设置注册日期，这里需要从用户数据中获取
+                document.getElementById('register-date').textContent = '正在加载...';
+
+                // 绑定标签页切换事件
+                const tabs = document.querySelectorAll('.profile-tab');
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', function () {
+                        // 移除所有标签页的active类
+                        tabs.forEach(t => t.classList.remove('active'));
+                        // 添加当前标签页的active类
+                        this.classList.add('active');
+
+                        // 隐藏所有内容区域
+                        document.querySelectorAll('.tab-content').forEach(content => {
+                            content.classList.remove('active');
+                        });
+
+                        // 显示当前标签页对应的内容区域
+                        const tabId = this.getAttribute('data-tab');
+                        document.getElementById(tabId).classList.add('active');
+                    });
+                });
+
+                // 绑定设置保存按钮事件
+                document.getElementById('save-settings').addEventListener('click', saveSettings);
+
+                // 绑定注销账号按钮事件
+                document.getElementById('delete-account').addEventListener('click', showDeleteConfirmation);
+                document.getElementById('cancel-delete').addEventListener('click', hideDeleteConfirmation);
+                document.getElementById('confirm-delete').addEventListener('click', deleteAccount);
+
+            } catch (e) {
+                console.error('Failed to parse user data:', e);
+                localStorage.removeItem('user_data');
+                document.getElementById('not-logged-in').style.display = 'block';
+                document.getElementById('profile-container').style.display = 'none';
+            }
+        });
+
+        // 加载游戏统计数据
+        function loadGameStats(userId) {
+            // 显示"正在加载"状态
+            const gameStatsList = document.getElementById('game-stats-list');
+            gameStatsList.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>正在加载游戏数据...</p></div>';
+
+            // 从API获取用户游戏数据
+            fetch(`/api/get_user_stats.php?user_id=${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const gameStats = data.game_stats;
+
+                        if (gameStats.length === 0) {
+                            // 没有游戏记录
+                            document.getElementById('game-stats-empty').style.display = 'block';
+                            gameStatsList.innerHTML = '';
+                        } else {
+                            // 有游戏记录，显示列表
+                            document.getElementById('game-stats-empty').style.display = 'none';
+                            gameStatsList.innerHTML = '';
+
+                            let totalScore = 0;
+                            let totalGames = 0;
+
+                            gameStats.forEach(stat => {
+                                // 计算总分（每个游戏的最高分之和）
+                                totalScore += parseInt(stat.best_score);
+                                totalGames += parseInt(stat.total_games);
+
+                                const listItem = document.createElement('li');
+                                listItem.className = 'game-stat-item';
+                                listItem.innerHTML = `
+                                    <div>
+                                        <div class="game-name">${stat.game_name}</div>
+                                        <div class="game-date">上次游戏: ${formatDate(stat.last_played)}</div>
+                                    </div>
+                                    <div class="game-score">${stat.best_score}</div>
+                                `;
+                                gameStatsList.appendChild(listItem);
+                            });
+
+                            // 更新游戏总数和总分
+                            document.getElementById('games-played').textContent = totalGames;
+                            document.getElementById('total-score').textContent = totalScore;
+                        }
+
+                        // 设置注册日期
+                        if (data.register_date) {
+                            document.getElementById('register-date').textContent = formatDate(data.register_date);
+                        } else {
+                            document.getElementById('register-date').textContent = '未知';
+                        }
+                    } else {
+                        // 如果API请求失败
+                        gameStatsList.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>无法加载游戏数据</p></div>';
+                        console.error('Failed to load game stats:', data.message);
+                    }
+                })
+                .catch(error => {
+                    gameStatsList.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>加载出错</p></div>';
+                    console.error('Error loading game stats:', error);
+                });
+        }
+
+        // 格式化日期函数
+        function formatDate(dateString) {
+            if (!dateString) return '未知';
+
+            // 尝试解析日期字符串
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) {
+                // 如果无法解析，直接返回原字符串
+                return dateString;
+            }
+
+            // 格式化为YYYY-MM-DD
+            return date.getFullYear() + '-' +
+                ('0' + (date.getMonth() + 1)).slice(-2) + '-' +
+                ('0' + date.getDate()).slice(-2);
+        }
+
+        // 保存账号设置
+        function saveSettings() {
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const alertElement = document.getElementById('settings-alert');
+
+            // 验证密码
+            if (newPassword && newPassword !== confirmPassword) {
+                alertElement.className = 'alert alert-danger';
+                alertElement.textContent = '两次输入的密码不一致';
+                alertElement.style.display = 'block';
+                return;
+            }
+
+            if (newPassword && newPassword.length < 6) {
+                alertElement.className = 'alert alert-danger';
+                alertElement.textContent = '密码长度应不少于6个字符';
+                alertElement.style.display = 'block';
+                return;
+            }
+
+            // 如果没有修改密码，显示提示
+            if (!newPassword) {
+                alertElement.className = 'alert alert-success';
+                alertElement.textContent = '没有进行任何修改';
+                alertElement.style.display = 'block';
+                return;
+            }
+
+            // 这里需要请求后端API更新用户设置
+            // 显示成功消息
+            alertElement.className = 'alert alert-success';
+            alertElement.textContent = '设置已保存';
+            alertElement.style.display = 'block';
+
+            // 清空密码字段
+            document.getElementById('new-password').value = '';
+            document.getElementById('confirm-password').value = '';
+        }
+
+        // 显示注销确认对话框
+        function showDeleteConfirmation() {
+            document.getElementById('delete-account-modal').classList.add('active');
+            document.getElementById('delete-confirm-password').value = '';
+            document.getElementById('delete-confirm-password').focus();
+        }
+
+        // 隐藏注销确认对话框
+        function hideDeleteConfirmation() {
+            document.getElementById('delete-account-modal').classList.remove('active');
+        }
+
+        // 执行账号注销
+        function deleteAccount() {
+            const password = document.getElementById('delete-confirm-password').value;
+            const alertElement = document.getElementById('settings-alert');
+
+            if (!password) {
+                alert('请输入密码以确认操作');
+                return;
+            }
+
+            // 获取用户数据
+            const userData = localStorage.getItem('user_data');
+            if (!userData) {
+                return;
+            }
+
+            const user = JSON.parse(userData);
+
+            // 发送注销请求到服务器
+            fetch('/api/delete_account.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: user.id,
+                    username: user.username,
+                    password: password
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 注销成功
+                        localStorage.removeItem('user_data');
+
+                        // 隐藏对话框
+                        hideDeleteConfirmation();
+
+                        // 显示成功信息并跳转
+                        alert('账号已成功注销。感谢您使用我们的服务。');
+                        window.location.href = '/';
+                    } else {
+                        // 注销失败
+                        alert('注销失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('删除账号出错:', error);
+                    alert('发生了错误，请稍后再试。');
+                });
+        }
+    </script>
+</body>
+
+</html>

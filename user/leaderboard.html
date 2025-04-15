@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏排行榜 - H.AiGame</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="icon" href="/images/game.png" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .leaderboard-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-selector {
+            margin-bottom: 20px;
+        }
+
+        .game-selector select {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+            min-width: 200px;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .leaderboard-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        .leaderboard-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .leaderboard-table tr:hover {
+            background-color: #f0f0f0;
+        }
+
+        .rank-number {
+            font-weight: bold;
+            width: 60px;
+        }
+
+        .top-3 {
+            position: relative;
+        }
+
+        .rank-1 {
+            color: #FFD700;
+            /* 金色 */
+        }
+
+        .rank-2 {
+            color: #C0C0C0;
+            /* 银色 */
+        }
+
+        .rank-3 {
+            color: #CD7F32;
+            /* 铜色 */
+        }
+
+        .medal {
+            margin-right: 5px;
+        }
+
+        .user-score {
+            background-color: #e6f7ff;
+            font-weight: bold;
+        }
+
+        .loading-message {
+            text-align: center;
+            padding: 20px;
+            font-size: 18px;
+            color: #666;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 20px;
+            font-size: 18px;
+            color: #666;
+        }
+
+        .user-best-score {
+            margin-top: 20px;
+            text-align: center;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+
+        .login-required {
+            margin-top: 20px;
+            text-align: center;
+            padding: 15px;
+            background-color: #fff3cd;
+            border-radius: 4px;
+        }
+
+        .login-link {
+            display: inline-block;
+            margin-top: 10px;
+            background-color: #007bff;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+
+        .login-link:hover {
+            background-color: #0069d9;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 页面头部 -->
+    <div id="header"></div>
+
+    <!-- 页面主体 -->
+    <main class="main-content">
+        <div class="container">
+            <div class="leaderboard-container">
+                <h1 style="text-align: center; margin-bottom: 30px;">游戏排行榜</h1>
+
+                <div class="game-selector">
+                    <label for="game-select">选择游戏：</label>
+                    <select id="game-select">
+                        <option value="">加载中...</option>
+                    </select>
+                </div>
+
+                <div id="leaderboard-content">
+                    <div id="loading-message" class="loading-message">加载排行榜数据中...</div>
+
+                    <table id="leaderboard-table" class="leaderboard-table" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>用户名</th>
+                                <th>分数</th>
+                                <th>日期</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-body">
+                            <!-- 排行榜数据将通过JS动态生成 -->
+                        </tbody>
+                    </table>
+
+                    <div id="empty-message" class="empty-message" style="display: none;">
+                        暂无排行榜数据
+                    </div>
+                </div>
+
+                <div id="user-best-score" class="user-best-score" style="display: none;">
+                    <h3>您的最高分: <span id="user-best-score-value">0</span></h3>
+                </div>
+
+                <div id="login-required" class="login-required" style="display: none;">
+                    <p>登录后可以查看您的最高分，并参与排行榜竞争！</p>
+                    <a href="/user/login.html" class="login-link">立即登录</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页面底部 -->
+    <div id="footer"></div>
+
+    <!-- 引入jQuery -->
+    <script src="../assets/js/jquery-3.6.0.min.js"></script>
+    <script>
+        // 加载header和footer
+        $("#header").load("/components/header.html");
+        $("#footer").load("/components/footer.html");
+
+        // 当前选择的游戏
+        let currentGame = '';
+
+        // 页面加载完成后加载排行榜
+        document.addEventListener('DOMContentLoaded', function () {
+            // 首先加载游戏列表
+            loadGamesList();
+
+            // 绑定游戏选择器变化事件
+            document.getElementById('game-select').addEventListener('change', function () {
+                currentGame = this.value;
+                if (currentGame) {
+                    loadLeaderboard(currentGame);
+                }
+            });
+
+            // 检查登录状态
+            checkLoginStatus();
+        });
+
+        // 加载游戏列表
+        function loadGamesList() {
+            fetch('/api/get_games.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.games && data.games.length > 0) {
+                        const selectElement = document.getElementById('game-select');
+                        selectElement.innerHTML = ''; // 清空现有选项
+
+                        // 添加游戏选项
+                        data.games.forEach(game => {
+                            const option = document.createElement('option');
+                            option.value = game.slug;
+                            option.textContent = game.name;
+                            selectElement.appendChild(option);
+                        });
+
+                        // 设置当前游戏并加载排行榜
+                        currentGame = selectElement.value;
+                        loadLeaderboard(currentGame);
+                    } else {
+                        // 游戏列表为空
+                        const selectElement = document.getElementById('game-select');
+                        selectElement.innerHTML = '<option value="">暂无游戏</option>';
+
+                        // 显示提示消息
+                        document.getElementById('loading-message').style.display = 'none';
+                        document.getElementById('empty-message').textContent = '暂无游戏数据，请先添加游戏';
+                        document.getElementById('empty-message').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('获取游戏列表出错:', error);
+                    const selectElement = document.getElementById('game-select');
+                    selectElement.innerHTML = '<option value="">加载失败</option>';
+
+                    // 显示错误消息
+                    document.getElementById('loading-message').style.display = 'none';
+                    document.getElementById('empty-message').textContent = '加载游戏列表失败，请刷新页面重试';
+                    document.getElementById('empty-message').style.display = 'block';
+                });
+        }
+
+        // 加载排行榜数据
+        function loadLeaderboard(gameSlug) {
+            // 显示加载状态
+            document.getElementById('loading-message').style.display = 'block';
+            document.getElementById('leaderboard-table').style.display = 'none';
+            document.getElementById('empty-message').style.display = 'none';
+
+            // 请求排行榜数据
+            fetch(`/api/get_leaderboard.php?game_slug=${gameSlug}&limit=20`)
+                .then(response => response.json())
+                .then(data => {
+                    // 隐藏加载状态
+                    document.getElementById('loading-message').style.display = 'none';
+
+                    if (data.success) {
+                        if (data.leaderboard && data.leaderboard.length > 0) {
+                            // 显示排行榜表格
+                            document.getElementById('leaderboard-table').style.display = 'table';
+
+                            // 填充排行榜数据
+                            const tbody = document.getElementById('leaderboard-body');
+                            tbody.innerHTML = '';
+
+                            // 获取当前用户名
+                            let currentUsername = '';
+                            const userData = localStorage.getItem('user_data');
+                            if (userData) {
+                                try {
+                                    const user = JSON.parse(userData);
+                                    currentUsername = user.username;
+                                } catch (e) { }
+                            }
+
+                            data.leaderboard.forEach((entry, index) => {
+                                const row = document.createElement('tr');
+
+                                // 如果是当前用户，添加特殊样式
+                                if (entry.username === currentUsername) {
+                                    row.classList.add('user-score');
+                                }
+
+                                // 排名单元格
+                                const rankCell = document.createElement('td');
+                                rankCell.className = 'rank-number';
+
+                                // 前三名显示特殊标记
+                                if (index < 3) {
+                                    rankCell.classList.add('top-3', `rank-${index + 1}`);
+
+                                    // 添加奖牌图标
+                                    let medalIcon;
+                                    if (index === 0) {
+                                        medalIcon = '🥇';
+                                    } else if (index === 1) {
+                                        medalIcon = '🥈';
+                                    } else {
+                                        medalIcon = '🥉';
+                                    }
+
+                                    rankCell.innerHTML = `<span class="medal">${medalIcon}</span>${index + 1}`;
+                                } else {
+                                    rankCell.textContent = index + 1;
+                                }
+
+                                // 用户名单元格
+                                const usernameCell = document.createElement('td');
+                                usernameCell.textContent = entry.username;
+
+                                // 分数单元格
+                                const scoreCell = document.createElement('td');
+                                scoreCell.textContent = entry.score;
+
+                                // 日期单元格
+                                const dateCell = document.createElement('td');
+                                const date = new Date(entry.played_at);
+                                dateCell.textContent = date.toLocaleDateString();
+
+                                // 添加所有单元格到行
+                                row.appendChild(rankCell);
+                                row.appendChild(usernameCell);
+                                row.appendChild(scoreCell);
+                                row.appendChild(dateCell);
+
+                                // 添加行到表格
+                                tbody.appendChild(row);
+                            });
+
+                            // 显示用户最佳分数
+                            if (data.user_best_score && data.user_best_score.best_score) {
+                                document.getElementById('user-best-score').style.display = 'block';
+                                document.getElementById('user-best-score-value').textContent = data.user_best_score.best_score;
+                                document.getElementById('login-required').style.display = 'none';
+                            } else {
+                                updateUserScoreDisplay();
+                            }
+                        } else {
+                            // 显示空数据消息
+                            document.getElementById('empty-message').style.display = 'block';
+                            updateUserScoreDisplay();
+                        }
+                    } else {
+                        // 显示错误消息
+                        document.getElementById('empty-message').textContent = '获取排行榜数据失败';
+                        document.getElementById('empty-message').style.display = 'block';
+                        updateUserScoreDisplay();
+                    }
+                })
+                .catch(error => {
+                    console.error('获取排行榜错误:', error);
+                    document.getElementById('loading-message').style.display = 'none';
+                    document.getElementById('empty-message').textContent = '网络错误，请稍后再试';
+                    document.getElementById('empty-message').style.display = 'block';
+                    updateUserScoreDisplay();
+                });
+        }
+
+        // 检查登录状态
+        function checkLoginStatus() {
+            const userData = localStorage.getItem('user_data');
+            if (!userData) {
+                document.getElementById('login-required').style.display = 'block';
+                document.getElementById('user-best-score').style.display = 'none';
+            }
+        }
+
+        // 更新用户分数显示
+        function updateUserScoreDisplay() {
+            const userData = localStorage.getItem('user_data');
+            if (userData) {
+                document.getElementById('user-best-score').style.display = 'block';
+                document.getElementById('user-best-score-value').textContent = '0';
+                document.getElementById('login-required').style.display = 'none';
+            } else {
+                document.getElementById('user-best-score').style.display = 'none';
+                document.getElementById('login-required').style.display = 'block';
+            }
+        }
+    </script>
+</body>
+
+</html>

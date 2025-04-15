@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户注册 - H.AiGame</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="icon" href="/images/game.png" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="../assets/js/jquery-3.6.0.min.js"></script>
+    <style>
+        .register-container {
+            max-width: 400px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .register-container h2 {
+            color: #776e65;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #776e65;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e8e0d8;
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: #faf8ef;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            border-color: #1e2738;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(30, 39, 56, 0.2);
+            background-color: #fff;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #b8afa8;
+            font-size: 12px;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            background-color: #1e2738;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background-color: #2a3a54;
+            transform: translateY(-2px);
+        }
+
+        .register-links {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .register-links a {
+            color: #1e2738;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        .register-links a:hover {
+            color: #2a3a54;
+            text-decoration: underline;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 页面头部 -->
+    <div id="header"></div>
+
+    <!-- 页面主体 -->
+    <main class="main-content">
+        <div class="container">
+            <div class="register-container">
+                <h2>用户注册</h2>
+
+                <form id="register-form">
+                    <div id="register-alert" class="alert alert-danger" style="display: none;"></div>
+
+                    <div class="form-group">
+                        <label for="username">用户名</label>
+                        <input type="text" id="username" class="form-control" placeholder="请输入用户名">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">邮箱</label>
+                        <input type="email" id="email" class="form-control" placeholder="请输入邮箱">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">密码</label>
+                        <input type="password" id="password" class="form-control" placeholder="请输入密码">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm-password">确认密码</label>
+                        <input type="password" id="confirm-password" class="form-control" placeholder="请再次输入密码">
+                    </div>
+
+                    <button type="submit" id="register-btn" class="btn btn-primary">注册</button>
+                    <p>已有账号？<a href="login.html">登录</a></p>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页面底部 -->
+    <div id="footer"></div>
+
+    <script>
+        // 加载header和footer
+        $("#header").load("/components/header.html");
+        $("#footer").load("/components/footer.html");
+
+        // 检查是否已经登录，如果已登录则跳转到首页
+        document.addEventListener('DOMContentLoaded', function () {
+            const userData = localStorage.getItem('user_data');
+            if (userData) {
+                try {
+                    // 已登录，跳转到首页
+                    const alertElement = document.getElementById('register-alert');
+                    alertElement.className = 'alert alert-success';
+                    alertElement.textContent = '您已登录，正在跳转到首页...';
+                    alertElement.style.display = 'block';
+
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                } catch (e) {
+                    // 解析错误，清除无效的用户数据
+                    localStorage.removeItem('user_data');
+                }
+            }
+        });
+
+        // 注册功能
+        document.getElementById('register-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // 获取用户输入
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const email = document.getElementById('email').value;
+
+            // 表单验证
+            let isValid = true;
+            let errorMessage = '';
+
+            // 验证用户名
+            if (!username || username.length < 3 || username.length > 20) {
+                isValid = false;
+                errorMessage = '用户名长度应在3-20个字符之间';
+            }
+
+            // 验证密码
+            else if (!password || password.length < 6) {
+                isValid = false;
+                errorMessage = '密码长度应不少于6个字符';
+            }
+
+            // 验证确认密码
+            else if (password !== confirmPassword) {
+                isValid = false;
+                errorMessage = '两次输入的密码不一致';
+            }
+
+            // 验证邮箱
+            else if (email && !isValidEmail(email)) {
+                isValid = false;
+                errorMessage = '请输入有效的邮箱地址';
+            }
+
+            // 显示验证错误
+            if (!isValid) {
+                const alertBox = document.getElementById('register-alert');
+                alertBox.className = 'alert alert-danger';
+                alertBox.textContent = errorMessage;
+                alertBox.style.display = 'block';
+                return;
+            }
+
+            // 显示加载状态
+            document.getElementById('register-btn').textContent = '注册中...';
+            document.getElementById('register-btn').disabled = true;
+
+            // 发送注册请求
+            fetch('/api/register.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password,
+                    email: email
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // 恢复按钮状态
+                    document.getElementById('register-btn').textContent = '注册';
+                    document.getElementById('register-btn').disabled = false;
+
+                    const alertBox = document.getElementById('register-alert');
+
+                    if (data.success) {
+                        // 注册成功
+                        alertBox.className = 'alert alert-success';
+                        alertBox.textContent = '注册成功，正在跳转到登录页面...';
+                        alertBox.style.display = 'block';
+
+                        // 自动登录用户
+                        setTimeout(() => {
+                            // 构建登录请求
+                            fetch('/api/login.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    username: username,
+                                    password: password
+                                })
+                            })
+                                .then(response => response.json())
+                                .then(loginData => {
+                                    if (loginData.success) {
+                                        // 登录成功，保存用户信息
+                                        localStorage.setItem('user_data', JSON.stringify({
+                                            id: loginData.user.id,
+                                            username: loginData.user.username,
+                                            email: loginData.user.email, // 确保保存email字段
+                                            token: loginData.user.token
+                                        }));
+
+                                        // 跳转到首页
+                                        window.location.href = '/';
+                                    } else {
+                                        // 登录失败，跳转到登录页
+                                        window.location.href = '/user/login.html';
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('自动登录失败:', error);
+                                    window.location.href = '/user/login.html';
+                                });
+                        }, 1500);
+                    } else {
+                        // 注册失败
+                        alertBox.className = 'alert alert-danger';
+                        alertBox.textContent = data.message || '注册失败，请稍后再试';
+                        alertBox.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    // 恢复按钮状态
+                    document.getElementById('register-btn').textContent = '注册';
+                    document.getElementById('register-btn').disabled = false;
+
+                    // 显示错误信息
+                    console.error('注册请求出错:', error);
+                    const alertBox = document.getElementById('register-alert');
+                    alertBox.className = 'alert alert-danger';
+                    alertBox.textContent = '网络错误，请稍后重试';
+                    alertBox.style.display = 'block';
+                });
+        });
+
+        // 邮箱验证函数
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+    </script>
+</body>
+
+</html>

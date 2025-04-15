@@ -5,11 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>管理员登录 - HoshinoAI</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/about.css">
     <link rel="icon" href="/images/game.png" type="image/svg+xml">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../assets/js/jquery-3.6.0.min.js"></script>
 </head>
 
 <body>
@@ -94,7 +94,16 @@
                     localStorage.setItem('admin_login_time', new Date().toISOString());
 
                     // 重定向到管理页面
-                    window.location.href = 'admin-notify.html';
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const redirect = urlParams.get('redirect');
+
+                    if (redirect === 'users') {
+                        window.location.href = 'users-manager.html';
+                    } else if (redirect === 'games') {
+                        window.location.href = 'games-manager.html';
+                    } else {
+                        window.location.href = 'admin-notify.html';
+                    }
                 } else {
                     // 登录失败
                     document.getElementById('login-error').textContent = '账号或密码不正确，请重试';
