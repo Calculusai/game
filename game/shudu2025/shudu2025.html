@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数独游戏 - H.AiGame</title>
+    <link rel="stylesheet" href="../../assets/css/common.css">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="shudu2025.css">
+    <link rel="icon" href="/images/game.png" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="../../assets/js/jquery-3.6.0.min.js"></script>
+    <script src="../../assets/js/login-modal.js"></script>
+    <script src="../../assets/js/leaderboard-modal.js"></script>
+</head>
+
+<body>
+    <!-- 页面头部 -->
+    <div id="header"></div>
+
+    <!-- 游戏内容 -->
+    <main class="main-content">
+        <div class="container">
+            <div class="game-header">
+                <h1 class="title">H.Ai.数独</h1>
+                <div class="game-controls">
+                    <div class="timer">
+                        <i class="fas fa-clock"></i>
+                        <span id="timer">00:00</span>
+                    </div>
+                    <div class="difficulty-selector">
+                        <select id="difficulty">
+                            <option value="easy">简单</option>
+                            <option value="medium">中等</option>
+                            <option value="hard">困难</option>
+                        </select>
+                    </div>
+                    <button id="start-game" class="btn-primary">开始游戏</button>
+                    <button id="new-game" class="btn-primary">新游戏</button>
+                    <button id="hint" class="btn-secondary">提示</button>
+                    <button id="check" class="btn-success">检查</button>
+                </div>
+            </div>
+
+            <div class="game-container">
+                <div class="sudoku-grid" id="sudoku-grid">
+                    <!-- 数独格子将通过JS动态生成 -->
+                </div>
+
+                <div class="action-controls">
+                    <button class="action-btn undo" id="undo-button">
+                        <i class="fas fa-undo"></i> 撤销
+                    </button>
+                    <button class="action-btn clear" id="clear-button">
+                        <i class="fas fa-eraser"></i> 清除
+                    </button>
+                    <button class="action-btn leaderboard" id="show-leaderboard">
+                        <i class="fas fa-trophy"></i> 排行榜
+                    </button>
+                </div>
+            </div>
+
+            <div class="game-message" id="game-message">
+                <div class="message-text" id="message-text"></div>
+                <button class="btn-primary" id="retry">重新开始</button>
+                <button class="btn-success" id="save-score">保存分数</button>
+            </div>
+
+            <!-- 游戏介绍和玩法说明 -->
+            <div class="game-instructions">
+                <h2>游戏介绍</h2>
+                <p>数独是一种基于逻辑的数字填充游戏。</p>
+
+                <h3>游戏规则</h3>
+                <ul>
+                    <li>每一行必须包含1-9的数字，每个数字只能出现一次</li>
+                    <li>每一列必须包含1-9的数字，每个数字只能出现一次</li>
+                    <li>每个3×3的宫格必须包含1-9的数字，每个数字只能出现一次</li>
+                </ul>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- 弹出式数字键盘 -->
+    <div class="number-panel" id="number-panel">
+        <div class="number-grid">
+            <button class="number-btn" data-number="1">1</button>
+            <button class="number-btn" data-number="2">2</button>
+            <button class="number-btn" data-number="3">3</button>
+            <button class="number-btn" data-number="4">4</button>
+            <button class="number-btn" data-number="5">5</button>
+            <button class="number-btn" data-number="6">6</button>
+            <button class="number-btn" data-number="7">7</button>
+            <button class="number-btn" data-number="8">8</button>
+            <button class="number-btn" data-number="9">9</button>
+        </div>
+    </div>
+
+    <!-- 计分详情模态窗口 -->
+    <div class="modal" id="score-modal">
+        <div class="modal-content score-details">
+            <span class="close-button" id="close-score-modal">&times;</span>
+            <h2>计分详情</h2>
+            <div class="score-items">
+                <div class="score-item">
+                    <span class="score-label">基础分数:</span>
+                    <span class="score-value" id="base-score">0</span>
+                </div>
+                <div class="score-item">
+                    <span class="score-label">难度奖励:</span>
+                    <span class="score-value" id="difficulty-bonus">×1.0</span>
+                </div>
+                <div class="score-item">
+                    <span class="score-label">提示扣除:</span>
+                    <span class="score-value" id="hints-penalty">-0%</span>
+                </div>
+                <div class="score-item final-score">
+                    <span class="score-label">最终分数:</span>
+                    <span class="score-value" id="final-score">0</span>
+                </div>
+            </div>
+            <div class="score-note">
+                <p>注: 分数越高越好，难度越高、用时越短、提示使用少分数越高</p>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-primary" id="retry-game">重新开始</button>
+                <button class="btn-success" id="save-score-modal">保存分数</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页面底部 -->
+    <div id="footer"></div>
+
+    <script src="shudu2025.js"></script>
+</body>
+
+</html>
+
+<script>
+    // 加载header和footer
+    $("#header").load("/components/header.html");
+    $("#footer").load("/components/footer.html");
+</script>

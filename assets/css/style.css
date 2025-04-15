@@ -269,6 +269,47 @@ h1 {
     padding: 15px;
 }
 
+/* 数独游戏预览样式 */
+.game-preview-sudoku {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 2px;
+    height: 200px;
+    background-color: #24293e;
+    border-radius: 8px 8px 0 0;
+    padding: 15px;
+}
+
+.sudoku-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #24293e;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s;
+}
+
+.sudoku-cell:nth-child(odd) {
+    background-color: #e8e8e8;
+}
+
+.sudoku-cell:empty {
+    background-color: #fff;
+}
+
+.game-card:hover .sudoku-cell {
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.game-card:hover .sudoku-cell:empty {
+    background-color: #f0f0f0;
+}
+
 /* 2048数字样式 */
 .number-2,
 .number-0,

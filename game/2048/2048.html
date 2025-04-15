@@ -11,6 +11,8 @@
     <link rel="icon" href="/images/game.png" type="image/svg+xml">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="../../assets/js/jquery-3.6.0.min.js"></script>
+    <script src="../../assets/js/login-modal.js"></script>
+    <script src="../../assets/js/leaderboard-modal.js"></script>
 </head>
 
 <body>
@@ -60,61 +62,6 @@
             </div>
         </div>
     </main>
-
-    <!-- 排行榜模态框 -->
-    <div class="modal" id="leaderboard-modal">
-        <div class="modal-content">
-            <span class="close-button" id="close-leaderboard">&times;</span>
-            <h2>2048 排行榜</h2>
-            <div id="leaderboard-content">
-                <table class="leaderboard-table">
-                    <thead>
-                        <tr>
-                            <th>排名</th>
-                            <th>用户名</th>
-                            <th>分数</th>
-                            <th>日期</th>
-                        </tr>
-                    </thead>
-                    <tbody id="leaderboard-body">
-                        <!-- 排行榜数据将通过JS动态生成 -->
-                    </tbody>
-                </table>
-            </div>
-            <div id="leaderboard-loading">加载中...</div>
-            <div id="user-best-score" style="margin-top: 20px; text-align: center; display: none;">
-                <h3>您的最高分: <span id="user-best-score-value">0</span></h3>
-            </div>
-            <div id="login-required" style="margin-top: 20px; text-align: center; display: none;">
-                <p>登录后可以保存您的分数</p>
-                <a href="/user/login.html" class="login-link">立即登录</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- 登录模态框 -->
-    <div class="modal" id="login-modal">
-        <div class="modal-content">
-            <span class="close-button" id="close-login">&times;</span>
-            <h2>用户登录</h2>
-            <div id="login-alert" class="alert alert-danger"></div>
-            <div class="form-group">
-                <label for="login-username">用户名</label>
-                <input type="text" id="login-username" name="username" required>
-            </div>
-            <div class="form-group">
-                <label for="login-password">密码</label>
-                <input type="password" id="login-password" name="password" required>
-            </div>
-            <div class="form-group">
-                <button type="button" id="login-submit" class="btn-primary">登录</button>
-            </div>
-            <div class="login-links">
-                <span>还没有账号？</span>
-                <a href="/user/register.html">立即注册</a>
-            </div>
-        </div>
-    </div>
 
     <!-- 页面底部 -->
     <div id="footer"></div>

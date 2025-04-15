@@ -13,12 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bestScoreDisplay = document.getElementById('best-score');
     const messageContainer = document.getElementById('game-message');
     const leaderboardButton = document.getElementById('leaderboard-button');
-    const leaderboardModal = document.getElementById('leaderboard-modal');
-    const closeLeaderboardButton = document.getElementById('close-leaderboard');
     const saveScoreButton = document.getElementById('save-score');
-    const loginModal = document.getElementById('login-modal');
-    const closeLoginButton = document.getElementById('close-login');
-    const loginSubmitButton = document.getElementById('login-submit');
 
     // 游戏状态
     let grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
@@ -38,10 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('home-button').addEventListener('click', goToHomePage);
     document.addEventListener('keydown', handleKeyPress);
     leaderboardButton.addEventListener('click', showLeaderboard);
-    closeLeaderboardButton.addEventListener('click', hideLeaderboard);
     saveScoreButton.addEventListener('click', () => saveScore(false));
-    closeLoginButton.addEventListener('click', hideLoginModal);
-    loginSubmitButton.addEventListener('click', handleLogin);
     setupTouchEvents();
 
     /**
@@ -739,266 +731,98 @@ document.addEventListener('DOMContentLoaded', () => {
      * 显示排行榜
      */
     function showLeaderboard() {
-        // 显示模态框
-        leaderboardModal.style.display = 'block';
-
-        // 清空并显示加载中
-        document.getElementById('leaderboard-body').innerHTML = '';
-        document.getElementById('leaderboard-loading').style.display = 'block';
-        document.getElementById('leaderboard-content').style.display = 'none';
-
-        // 获取排行榜数据
-        fetch('/api/get_leaderboard.php?game_slug=2048')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('leaderboard-loading').style.display = 'none';
-                document.getElementById('leaderboard-content').style.display = 'block';
-
-                if (data.success) {
-                    // 填充排行榜
-                    const tbody = document.getElementById('leaderboard-body');
-                    tbody.innerHTML = '';
-
-                    if (data.leaderboard && data.leaderboard.length > 0) {
-                        data.leaderboard.forEach((entry, index) => {
-                            const row = document.createElement('tr');
-
-                            const rankCell = document.createElement('td');
-                            rankCell.textContent = index + 1;
-
-                            const usernameCell = document.createElement('td');
-                            usernameCell.textContent = entry.username;
-
-                            const scoreCell = document.createElement('td');
-                            scoreCell.textContent = entry.score;
-
-                            const dateCell = document.createElement('td');
-                            const date = new Date(entry.played_at);
-                            dateCell.textContent = date.toLocaleDateString();
-
-                            row.appendChild(rankCell);
-                            row.appendChild(usernameCell);
-                            row.appendChild(scoreCell);
-                            row.appendChild(dateCell);
-
-                            tbody.appendChild(row);
-                        });
-                    } else {
-                        const row = document.createElement('tr');
-                        const cell = document.createElement('td');
-                        cell.colSpan = 4;
-                        cell.style.textAlign = 'center';
-                        cell.textContent = '暂无排行榜数据';
-                        row.appendChild(cell);
-                        tbody.appendChild(row);
-                    }
-
-                    // 显示用户最佳分数
-                    if (data.user_best_score && data.user_best_score.best_score) {
-                        document.getElementById('user-best-score').style.display = 'block';
-                        document.getElementById('user-best-score-value').textContent = data.user_best_score.best_score;
-                        document.getElementById('login-required').style.display = 'none';
-                    } else {
-                        // 检查用户是否登录
-                        const userData = localStorage.getItem('user_data');
-                        if (userData) {
-                            document.getElementById('user-best-score').style.display = 'block';
-                            document.getElementById('user-best-score-value').textContent = '0';
-                        } else {
-                            document.getElementById('login-required').style.display = 'block';
-                            document.getElementById('user-best-score').style.display = 'none';
-                        }
-                    }
-                } else {
-                    // 显示错误信息
-                    const tbody = document.getElementById('leaderboard-body');
-                    tbody.innerHTML = '';
-                    const row = document.createElement('tr');
-                    const cell = document.createElement('td');
-                    cell.colSpan = 4;
-                    cell.style.textAlign = 'center';
-                    cell.textContent = '获取排行榜失败';
-                    row.appendChild(cell);
-                    tbody.appendChild(row);
-                }
-            })
-            .catch(error => {
-                console.error('获取排行榜错误:', error);
-                document.getElementById('leaderboard-loading').style.display = 'none';
-                document.getElementById('leaderboard-content').style.display = 'block';
-
-                const tbody = document.getElementById('leaderboard-body');
-                tbody.innerHTML = '';
-                const row = document.createElement('tr');
-                const cell = document.createElement('td');
-                cell.colSpan = 4;
-                cell.style.textAlign = 'center';
-                cell.textContent = '网络错误，请稍后再试';
-                row.appendChild(cell);
-                tbody.appendChild(row);
-            });
+        // 使用排行榜模态框API
+        LeaderboardModal.show('2048');
     }
 
     /**
      * 隐藏排行榜
      */
     function hideLeaderboard() {
-        leaderboardModal.style.display = 'none';
+        // 使用排行榜模态框API
+        LeaderboardModal.hide();
     }
 
     /**
      * 显示登录模态框
      */
     function showLoginModal() {
-        loginModal.style.display = 'block';
-        document.getElementById('login-alert').style.display = 'none';
-        document.getElementById('login-username').value = '';
-        document.getElementById('login-password').value = '';
+        // 使用登录模态框API
+        LoginModal.show(() => {
+            // 登录成功回调
+            saveScore(false);
+        });
     }
 
     /**
      * 隐藏登录模态框
      */
     function hideLoginModal() {
-        loginModal.style.display = 'none';
+        // 使用登录模态框API
+        LoginModal.hide();
     }
 
     /**
      * 处理登录
      */
     function handleLogin() {
-        const username = document.getElementById('login-username').value.trim();
-        const password = document.getElementById('login-password').value;
-        const alertElement = document.getElementById('login-alert');
-
-        // 简单验证
-        if (!username || !password) {
-            alertElement.textContent = '请填写完整的登录信息';
-            alertElement.style.display = 'block';
-            return;
-        }
-
-        // 显示加载状态
-        loginSubmitButton.textContent = '登录中...';
-        loginSubmitButton.disabled = true;
-
-        // 发送登录请求
-        fetch('/api/login.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                username: username,
-                password: password
-            })
-        })
-            .then(response => response.json())
-            .then(data => {
-                // 恢复按钮状态
-                loginSubmitButton.textContent = '登录';
-                loginSubmitButton.disabled = false;
-
-                if (data.success) {
-                    // 登录成功，保存用户信息到localStorage
-                    localStorage.setItem('user_data', JSON.stringify({
-                        id: data.user.id,
-                        username: data.user.username,
-                        email: data.user.email,
-                        token: data.user.token
-                    }));
-
-                    // 隐藏登录模态框
-                    hideLoginModal();
-
-                    // 更新UI
-                    updateScore();
-                    if (document.getElementById('leaderboard-modal').style.display === 'block') {
-                        showLeaderboard();
-                    }
-
-                    // 如果是在保存分数时登录的，自动保存分数
-                    if (score > 0) {
-                        saveScore(false);
-                    }
-                } else {
-                    // 登录失败，显示错误消息
-                    alertElement.className = 'alert alert-danger';
-                    alertElement.textContent = data.message || '登录失败，请检查用户名和密码';
-                    alertElement.style.display = 'block';
-                }
-            })
-            .catch(error => {
-                // 恢复按钮状态
-                loginSubmitButton.textContent = '登录';
-                loginSubmitButton.disabled = false;
-
-                // 显示错误消息
-                console.error('登录请求出错:', error);
-                alertElement.className = 'alert alert-danger';
-                alertElement.textContent = '网络错误，请稍后重试';
-                alertElement.style.display = 'block';
-            });
+        // 使用登录模态框API，此函数不再需要
     }
 
     /**
      * 保存分数
-     * @param {boolean} autoSave - 是否自动保存（游戏结束时）
+     * @param {boolean} autoSave 是否自动保存
      */
     function saveScore(autoSave = false) {
-        // 检查用户是否登录
-        const userData = localStorage.getItem('user_data');
-
-        if (!userData) {
-            // 未登录，显示登录模态框
-            if (!autoSave) {
-                showLoginModal();
-            }
+        // 检查游戏是否已结束
+        if (!gameOver && !gameWon && !autoSave) {
+            showMessage('游戏尚未结束，无法保存分数');
             return;
         }
 
-        const user = JSON.parse(userData);
+        // 检查用户是否登录
+        if (!LoginModal.isLoggedIn()) {
+            // 显示登录模态框
+            showLoginModal();
+            return;
+        }
 
-        // 已登录，提交分数
+        const userId = LoginModal.getUserId();
+
+        // 禁用保存按钮并更改文本
+        saveScoreButton.disabled = true;
+        saveScoreButton.textContent = '保存中...';
+
+        // 发送分数到后端API
         fetch('/api/submit_score.php', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify({
                 game_slug: '2048',
                 score: score,
-                user_id: user.id
+                user_id: userId
             })
         })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    if (!autoSave) {
-                        alert('分数保存成功！');
-                        saveScoreButton.disabled = true;
-                        saveScoreButton.textContent = '已保存';
-                    } else {
-                        console.log('游戏结束，分数自动保存成功');
-                    }
+                    saveScoreButton.textContent = '分数已保存';
 
-                    // 刷新排行榜
-                    if (document.getElementById('leaderboard-modal').style.display === 'block') {
-                        showLeaderboard();
-                    }
+                    // 显示排行榜
+                    showLeaderboard();
                 } else {
-                    if (!autoSave) {
-                        alert('分数保存失败：' + (data.message || '未知错误'));
-                    } else {
-                        console.error('自动保存分数失败:', data.message);
-                    }
+                    saveScoreButton.textContent = '保存失败';
+                    saveScoreButton.disabled = false;
+                    showMessage(data.message || '保存分数失败');
                 }
             })
             .catch(error => {
                 console.error('保存分数错误:', error);
-                if (!autoSave) {
-                    alert('网络错误，请稍后再试');
-                }
+                saveScoreButton.textContent = '保存失败';
+                saveScoreButton.disabled = false;
+                showMessage('网络错误，请稍后再试');
             });
     }
 
@@ -1008,15 +832,3 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGrid();
     });
 });
-
-// 点击模态框外部关闭模态框
-window.onclick = function (event) {
-    const leaderboardModal = document.getElementById('leaderboard-modal');
-    const loginModal = document.getElementById('login-modal');
-    if (event.target === leaderboardModal) {
-        leaderboardModal.style.display = 'none';
-    }
-    if (event.target === loginModal) {
-        loginModal.style.display = 'none';
-    }
-};

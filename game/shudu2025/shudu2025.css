@@ -1,0 +1,940 @@
+/* 基础样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+    position: relative;
+}
+
+/* 游戏容器 */
+.game-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 1rem;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+/* 游戏头部 */
+.game-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.game-header h1 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+/* 游戏控制 */
+.game-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.timer {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin: 0 0.5rem;
+}
+
+.difficulty-selector {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+    margin: 0 0.5rem;
+}
+
+/* 游戏区域 */
+.game-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* 数独网格 */
+.sudoku-grid {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    border: 2px solid #000;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    aspect-ratio: 1;
+    position: relative;
+    background-color: #fff;
+}
+
+.cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    border: 1px solid #bbb;
+    transition: background-color 0.2s;
+    background-color: #fff;
+}
+
+/* 确保单元格高度等于宽度以保持正方形 */
+.cell::before {
+    content: '';
+    display: block;
+    padding-top: 100%;
+}
+
+/* 移除所有之前的背景色设置 */
+.cell[data-row],
+.cell[data-col] {
+    background-color: #fff;
+}
+
+.cell:hover {
+    background-color: #f8e8b0;
+}
+
+.cell.selected {
+    background-color: #ffa500;
+}
+
+/* 初始生成的数字样式 */
+.cell.fixed {
+    color: #666;
+    background-color: #faf5eb;
+    cursor: not-allowed;
+}
+
+/* 用户填写的数字样式 */
+.cell:not(.fixed) {
+    color: #1a73e8;
+    font-weight: 600;
+    background-color: #fff;
+}
+
+/* 错误状态的样式 */
+.cell.error {
+    color: #e74c3c !important;
+    background-color: #ffe6e6 !important;
+}
+
+/* 定义3x3子网格边框 */
+.cell:nth-child(3n+1):not(:nth-child(9n+1)) {
+    border-left: 2px solid #000;
+}
+
+.cell:nth-child(9n) {
+    border-right: 2px solid #000;
+}
+
+/* 修正水平粗边框的位置 */
+.cell:nth-child(n+28):nth-child(-n+36),
+.cell:nth-child(n+55):nth-child(-n+63) {
+    border-top: 2px solid #000;
+}
+
+.cell:nth-child(n+1):nth-child(-n+9) {
+    border-top: 2px solid #000;
+}
+
+.cell:nth-child(n+73):nth-child(-n+81) {
+    border-bottom: 2px solid #000;
+}
+
+/* 色彩交替的单元格 */
+.cell.highlight-1 {
+    background-color: #fff9e6;
+}
+
+.cell.highlight-2 {
+    background-color: #eee;
+}
+
+/* 操作控制按钮 */
+.action-controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.action-btn.undo {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.action-btn.undo:hover {
+    background-color: #bee5eb;
+}
+
+.action-btn.clear {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.action-btn.clear:hover {
+    background-color: #f5c6cb;
+}
+
+.action-btn.leaderboard {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.action-btn.leaderboard:hover {
+    background-color: #ffeeba;
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.action-btn i {
+    font-size: 1.2rem;
+}
+
+/* 弹出式数字键盘 */
+.number-panel {
+    position: fixed;
+    display: none;
+    z-index: 100;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    padding: 0.5rem;
+    transform: translate(-50%, -50%);
+    animation: popUp 0.2s ease-out;
+    touch-action: none;
+}
+
+.number-panel.show {
+    display: block;
+}
+
+.number-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.3rem;
+}
+
+.number-btn {
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #eee;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.number-btn:hover {
+    background-color: #ddd;
+    transform: scale(1.05);
+}
+
+.number-btn:active {
+    background-color: #ccc;
+    transform: scale(0.95);
+}
+
+@keyframes popUp {
+    from {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0;
+    }
+
+    to {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+
+/* 游戏操作按钮 */
+.btn-primary,
+.btn-secondary,
+.btn-success {
+    padding: 0.7rem 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+    text-align: center;
+    margin: 0 0.3rem;
+    white-space: nowrap;
+}
+
+.btn-primary {
+    background-color: #3498db;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+}
+
+.btn-secondary {
+    background-color: #f1c40f;
+}
+
+.btn-secondary:hover {
+    background-color: #f39c12;
+}
+
+.btn-success {
+    background-color: #2ecc71;
+}
+
+.btn-success:hover {
+    background-color: #27ae60;
+}
+
+/* 游戏消息 */
+.game-message {
+    margin-top: 1rem;
+    text-align: center;
+    padding: 1rem;
+    display: none;
+}
+
+.message-text {
+    padding: 1rem;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+    display: none;
+    margin-bottom: 1rem;
+}
+
+.message-text.show {
+    display: block;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* 模态框 */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.show {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* 一般模态框内容 */
+.modal-content {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 10px;
+    max-width: 500px;
+    width: 90%;
+    position: relative;
+    margin: auto;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* 登录模态框特殊样式 */
+#login-modal .modal-content {
+    background-color: #fffef6;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid #f0eee0;
+    max-width: 420px;
+}
+
+#login-modal h2 {
+    color: #7a6a53;
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 25px;
+    font-weight: 500;
+}
+
+#login-modal .form-group {
+    margin-bottom: 25px;
+}
+
+#login-modal .form-group label {
+    display: block;
+    color: #5a5a5a;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+#login-modal .form-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #e0ddd0;
+    border-radius: 8px;
+    background-color: #fffdf2;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+#login-modal .form-group input:focus {
+    outline: none;
+    border-color: #c0b798;
+    box-shadow: 0 0 0 2px rgba(192, 183, 152, 0.2);
+}
+
+#login-modal .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background-color: #24293e;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#login-modal .btn-primary:hover {
+    background-color: #333d59;
+}
+
+#login-modal .login-links {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #666;
+}
+
+#login-modal .login-links a {
+    color: #7a6a53;
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 5px;
+}
+
+#login-modal .login-links a:hover {
+    text-decoration: underline;
+}
+
+#login-modal .close-button {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 22px;
+    color: #aaa;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+#login-modal .close-button:hover {
+    color: #666;
+}
+
+#login-modal .alert-danger {
+    background-color: #fff1f1;
+    border-color: #ffcaca;
+    color: #e74c3c;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+/* 表单样式 */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+/* 排行榜 */
+.leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+    padding: 0.8rem;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.leaderboard-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+/* 提示和警告 */
+.alert {
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.25rem;
+}
+
+.alert-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+/* 动画 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .game-container {
+        padding: 0.5rem;
+        margin: 1rem auto;
+    }
+
+    .cell {
+        font-size: 1.5rem;
+    }
+
+    .number-btn {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+
+    .btn-primary,
+    .btn-secondary,
+    .btn-success {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.9rem;
+    }
+
+    .game-controls {
+        justify-content: space-between;
+        padding: 0 0.5rem;
+        gap: 0.3rem;
+    }
+
+    .timer {
+        font-size: 1.2rem;
+        margin: 0 0.2rem;
+    }
+
+    .difficulty-selector {
+        padding: 0.4rem;
+        margin: 0 0.2rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .game-header h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .timer {
+        font-size: 1.1rem;
+    }
+
+    .cell {
+        font-size: 1.6rem;
+    }
+
+    .number-btn {
+        width: 3.5rem;
+        height: 3.5rem;
+        font-size: 1.8rem;
+    }
+
+    .game-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.4rem;
+    }
+
+    .btn-primary,
+    .btn-secondary,
+    .btn-success {
+        padding: 0.5rem 0.7rem;
+        font-size: 0.85rem;
+        margin: 0.2rem;
+    }
+
+    .action-controls {
+        gap: 0.5rem;
+    }
+
+    .action-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .modal-content {
+        padding: 1rem;
+    }
+
+    .number-panel {
+        padding: 0.8rem;
+    }
+
+    .number-grid {
+        gap: 0.5rem;
+    }
+
+    .cell {
+        min-height: 40px;
+        min-width: 40px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .number-panel {
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
+    }
+
+    .cell.fixed {
+        color: #666;
+        background-color: #faf5eb;
+    }
+
+    .cell:not(.fixed) {
+        color: #1a73e8;
+        background-color: #fff;
+    }
+
+    /* 确保移动端错误状态样式优先级 */
+    .cell.error {
+        color: #e74c3c !important;
+        background-color: #ffe6e6 !important;
+    }
+}
+
+/* 通用关闭按钮样式 */
+.close-button {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 22px;
+    color: #aaa;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.close-button:hover {
+    color: #666;
+}
+
+/* 游戏介绍和说明样式 */
+.game-instructions {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.game-instructions h2 {
+    color: #2c3e50;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.game-instructions h3 {
+    color: #34495e;
+    font-size: 1.2rem;
+    margin: 1.2rem 0 0.8rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #eee;
+    text-align: center;
+}
+
+.game-instructions p {
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.game-instructions ul {
+    color: #555;
+    list-style-position: inside;
+    padding-left: 0;
+    margin-bottom: 1rem;
+    text-align: left;
+    display: inline-block;
+}
+
+.game-instructions li {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+    font-size: 0.95rem;
+}
+
+.game-tips {
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-top: 2rem;
+}
+
+.game-tips h3 {
+    color: #2c3e50;
+    font-size: 1.2rem;
+    margin-top: 0;
+    border-bottom: none;
+}
+
+.game-tips ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.game-tips li {
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.game-tips li:before {
+    content: "💡";
+    position: absolute;
+    left: 0;
+    color: #f1c40f;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .game-instructions {
+        max-width: 90%;
+        padding: 1.2rem;
+        margin: 1.5rem auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .game-instructions {
+        max-width: 95%;
+        padding: 1rem;
+        margin: 1rem auto;
+    }
+
+    .game-instructions h2 {
+        font-size: 1.3rem;
+    }
+
+    .game-instructions h3 {
+        font-size: 1.1rem;
+    }
+
+    .game-instructions p,
+    .game-instructions li {
+        font-size: 0.9rem;
+    }
+}
+
+/* 计分详情模态窗口样式 */
+.score-details {
+    max-width: 400px !important;
+    text-align: center;
+    padding: 2rem !important;
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.score-details h2 {
+    color: #2c3e50;
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+}
+
+.score-items {
+    margin: 1.5rem 0;
+}
+
+.score-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid #eee;
+    font-size: 1.1rem;
+}
+
+.score-item:last-child {
+    border-bottom: none;
+}
+
+.score-label {
+    color: #666;
+    font-weight: normal;
+}
+
+.score-value {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.final-score {
+    margin-top: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem !important;
+}
+
+.final-score .score-label {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.final-score .score-value {
+    font-size: 1.4rem;
+    color: #27ae60;
+}
+
+.score-note {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background-color: #fff3cd;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #856404;
+}
+
+.modal-buttons {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.modal-buttons button {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 576px) {
+    .score-details {
+        max-width: 90% !important;
+        padding: 1.2rem !important;
+        margin: 0 !important;
+    }
+
+    .score-details h2 {
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+    }
+
+    .score-item {
+        font-size: 0.9rem;
+        padding: 0.6rem 0.8rem;
+    }
+
+    .final-score .score-label {
+        font-size: 1rem;
+    }
+
+    .final-score .score-value {
+        font-size: 1.1rem;
+    }
+
+    .score-note {
+        font-size: 0.8rem;
+        padding: 0.8rem;
+        margin-top: 1rem;
+    }
+
+    .modal-buttons button {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    /* 移动端数字大小调整 */
+    .cell {
+        font-size: 1.6rem;
+    }
+
+    .cell.fixed {
+        color: #666;
+        background-color: #faf5eb;
+    }
+
+    .cell:not(.fixed) {
+        color: #1a73e8;
+        background-color: #fff;
+    }
+}
+
+/* 确保错误状态样式在所有情况下都生效 */
+.cell.fixed.error,
+.cell:not(.fixed).error {
+    color: #e74c3c !important;
+    background-color: #ffe6e6 !important;
+}
