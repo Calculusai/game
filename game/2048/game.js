@@ -16,6 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const leaderboardModal = document.getElementById('leaderboard-modal');
     const closeLeaderboardButton = document.getElementById('close-leaderboard');
     const saveScoreButton = document.getElementById('save-score');
+    const loginModal = document.getElementById('login-modal');
+    const closeLoginButton = document.getElementById('close-login');
+    const loginSubmitButton = document.getElementById('login-submit');
 
     // 游戏状态
     let grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
@@ -37,6 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
     leaderboardButton.addEventListener('click', showLeaderboard);
     closeLeaderboardButton.addEventListener('click', hideLeaderboard);
     saveScoreButton.addEventListener('click', () => saveScore(false));
+    closeLoginButton.addEventListener('click', hideLoginModal);
+    loginSubmitButton.addEventListener('click', handleLogin);
     setupTouchEvents();
 
     /**
@@ -842,6 +847,101 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * 显示登录模态框
+     */
+    function showLoginModal() {
+        loginModal.style.display = 'block';
+        document.getElementById('login-alert').style.display = 'none';
+        document.getElementById('login-username').value = '';
+        document.getElementById('login-password').value = '';
+    }
+
+    /**
+     * 隐藏登录模态框
+     */
+    function hideLoginModal() {
+        loginModal.style.display = 'none';
+    }
+
+    /**
+     * 处理登录
+     */
+    function handleLogin() {
+        const username = document.getElementById('login-username').value.trim();
+        const password = document.getElementById('login-password').value;
+        const alertElement = document.getElementById('login-alert');
+
+        // 简单验证
+        if (!username || !password) {
+            alertElement.textContent = '请填写完整的登录信息';
+            alertElement.style.display = 'block';
+            return;
+        }
+
+        // 显示加载状态
+        loginSubmitButton.textContent = '登录中...';
+        loginSubmitButton.disabled = true;
+
+        // 发送登录请求
+        fetch('/api/login.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: username,
+                password: password
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                // 恢复按钮状态
+                loginSubmitButton.textContent = '登录';
+                loginSubmitButton.disabled = false;
+
+                if (data.success) {
+                    // 登录成功，保存用户信息到localStorage
+                    localStorage.setItem('user_data', JSON.stringify({
+                        id: data.user.id,
+                        username: data.user.username,
+                        email: data.user.email,
+                        token: data.user.token
+                    }));
+
+                    // 隐藏登录模态框
+                    hideLoginModal();
+
+                    // 更新UI
+                    updateScore();
+                    if (document.getElementById('leaderboard-modal').style.display === 'block') {
+                        showLeaderboard();
+                    }
+
+                    // 如果是在保存分数时登录的，自动保存分数
+                    if (score > 0) {
+                        saveScore(false);
+                    }
+                } else {
+                    // 登录失败，显示错误消息
+                    alertElement.className = 'alert alert-danger';
+                    alertElement.textContent = data.message || '登录失败，请检查用户名和密码';
+                    alertElement.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                // 恢复按钮状态
+                loginSubmitButton.textContent = '登录';
+                loginSubmitButton.disabled = false;
+
+                // 显示错误消息
+                console.error('登录请求出错:', error);
+                alertElement.className = 'alert alert-danger';
+                alertElement.textContent = '网络错误，请稍后重试';
+                alertElement.style.display = 'block';
+            });
+    }
+
+    /**
      * 保存分数
      * @param {boolean} autoSave - 是否自动保存（游戏结束时）
      */
@@ -850,9 +950,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const userData = localStorage.getItem('user_data');
 
         if (!userData) {
-            // 未登录，提示用户登录
-            if (!autoSave && confirm('保存分数需要登录，是否前往登录页面？')) {
-                window.location.href = '/user/login.html';
+            // 未登录，显示登录模态框
+            if (!autoSave) {
+                showLoginModal();
             }
             return;
         }
@@ -912,7 +1012,11 @@ document.addEventListener('DOMContentLoaded', () => {
 // 点击模态框外部关闭模态框
 window.onclick = function (event) {
     const leaderboardModal = document.getElementById('leaderboard-modal');
+    const loginModal = document.getElementById('login-modal');
     if (event.target === leaderboardModal) {
         leaderboardModal.style.display = 'none';
+    }
+    if (event.target === loginModal) {
+        loginModal.style.display = 'none';
     }
 };
